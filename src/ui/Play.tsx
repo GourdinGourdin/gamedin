@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import type { GameId } from '../engine/index.ts';
 import type { Difficulty } from '../engine/types.ts';
 import { DIFF_LABEL, formatTime, META } from '../games.ts';
@@ -9,6 +9,27 @@ import { UI } from './boards/index.ts';
 import type { Hint } from './boards/common.tsx';
 import { Back, Bulb, Help, Restart, Share, Sliders, Undo } from './icons.tsx';
 import { Choice, Sheet } from './Sheet.tsx';
+
+type ClockRef = RefObject<{ ms: number; last: number }>;
+
+/** The running time. It ticks on its own, so the board does not redraw with it. */
+function Clock({ clock, running }: { clock: ClockRef; running: boolean }) {
+  const [, tick] = useState(0);
+  useEffect(() => {
+    if (!running) { tick((n) => n + 1); return; }
+    clock.current.last = performance.now();
+    const step = () => {
+      const now = performance.now();
+      if (!document.hidden) clock.current.ms += now - clock.current.last;
+      clock.current.last = now;
+      tick((n) => n + 1);
+    };
+    const id = setInterval(step, 250);
+    return () => { step(); clearInterval(id); };
+  }, [running, clock]);
+  const ms = clock.current.ms;
+  return <time className="clock" aria-label={`Time ${formatTime(ms)}`}>{formatTime(ms)}</time>;
+}
 
 interface Props { game: GameId; size: number; difficulty: Difficulty; seed: string; daily?: string }
 
@@ -46,30 +67,24 @@ export function Play({ game, size, difficulty, seed, daily }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // the clock runs while the puzzle is on screen and unsolved
-  useEffect(() => {
-    if (!g || done || sheet) return;
-    clock.current.last = performance.now();
-    const tick = () => {
-      const now = performance.now();
-      if (!document.hidden) clock.current.ms += now - clock.current.last;
-      clock.current.last = now;
-      setMs(clock.current.ms);
-    };
-    const id = setInterval(tick, 250);
-    return () => { tick(); clearInterval(id); };
-  }, [g, done, sheet]);
-
   useEffect(() => {
     if (!g || done || !history.length) return;
     saveProgress(game, { key, state, history: history.slice(-200), ms: clock.current.ms, hints });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [history, hints]);
 
+  // the board gets one set() for its whole life, so it never re-renders just for a new function
+  const setRef = useRef<(next: unknown, merge?: boolean) => void>(() => {});
+  const stableSet = useCallback((next: unknown, merge?: boolean) => setRef.current(next, merge), []);
+
   if (failed) return <div className="page"><p className="empty">This puzzle could not be made. <a href="#/">Back to all games</a></p></div>;
 
   const finish = (final: unknown) => {
     if (!g || !ui.solved(g.puzzle, final, g.solution)) return;
+    const now = performance.now();
+    clock.current.ms += now - clock.current.last;
+    clock.current.last = now;
+    setMs(clock.current.ms);
     setDone(true); setHint(null);
     addResult({ game, size, difficulty, ms: Math.round(clock.current.ms), at: Date.now(), hints, daily });
     saveProgress(game, null);
@@ -80,6 +95,7 @@ export function Play({ game, size, difficulty, seed, daily }: Props) {
     setHistory((h) => (merge && h.length > 1 ? [...h.slice(0, -1), next] : [...h, next]));
     finish(next);
   };
+  setRef.current = set;
   const undo = () => { setHint(null); setHistory((h) => (h.length > 1 ? h.slice(0, -1) : h)); };
   const restart = () => { if (g) { setHint(null); setHistory((h) => [...h, ui.initial(g.puzzle)]); } };
   const askHint = () => {
@@ -111,11 +127,11 @@ export function Play({ game, size, difficulty, seed, daily }: Props) {
           <h1>{m.name}</h1>
           <p>{daily ? 'Daily puzzle' : m.sizeLabel(size)} <span>{DIFF_LABEL[difficulty]}</span></p>
         </div>
-        <time className="clock" aria-label={`Time ${formatTime(ms)}`}>{formatTime(ms)}</time>
+        <Clock clock={clock} running={!!g && !done && !sheet} />
       </header>
 
       <main className="stage">
-        {g ? <ui.Board puzzle={g.puzzle} solution={g.solution} state={state} set={set} done={done} hint={hint} settings={settings} />
+        {g ? <ui.Board puzzle={g.puzzle} solution={g.solution} state={state} set={stableSet} done={done} hint={hint} settings={settings} />
           : <div className="board-wait" aria-label="Making your puzzle" />}
       </main>
 

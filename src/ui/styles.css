@@ -1,31 +1,37 @@
 /* GamedIn design tokens and styles.
    Direction: a pocket puzzle book. Calm paper, one typeface, and the board is
    the only loud thing on screen. One accent colour per game. */
+/* Light: cream paper, warm ink. Dark: a warm night, never blue-black. Region
+   colours are full and saturated in both, so regions read at a glance. */
 :root {
-  --bg: #F6F4EE; --surface: #FFFFFF; --ink: #15171C; --ink-2: #454952; --muted: #6E727B; --line: #DDD9CF;
-  --cell: #EAE6DC; --cell-2: #D9D4C7; --bad: #CF3327; --bad-soft: #F8D5D0;
-  --trace: #E4572E; --crowns: #6C4BD8; --pairs: #2563C9; --plots: #18876A; --wind: #C73B73; --sym-a: #F0A31E;
-  --r0: #F4B6A6; --r1: #F7D58B; --r2: #B9DDA0; --r3: #9FD3E8; --r4: #C7B5F0; --r5: #F2B3D3; --r6: #D5CEBF; --r7: #F6BE85; --r8: #9DDCC5; --r9: #B4C4F2;
-  --shadow: 0 1px 0 rgba(21,23,28,.06);
+  --bg: #F7F0E1; --surface: #FFFBF3; --ink: #231E18; --ink-2: #4E463B; --muted: #7D7465; --line: #E4D9C4;
+  --cell: #FFFDF8; --cell-2: #E9E0CD; --grid: rgba(35, 30, 24, .13); --hole: #C9BFAB;
+  --edge: #231E18; --bad: #D23F2E; --bad-soft: #F7D3CA; --gold: #F0B21C; --gold-2: #A86F00; --on-region: #231E18;
+  --trace: #EC6A2E; --crowns: #7650DE; --pairs: #2C6BD3; --plots: #1C8A6B; --wind: #CC3B75; --sym-a: #F2A414;
+  --r0: #F79C62; --r1: #A88BEC; --r2: #6EC0F0; --r3: #93D27C; --r4: #F6CF4A; --r5: #F27B87; --r6: #5ECDBB; --r7: #DA9DEB; --r8: #CBBE9F; --r9: #DCE46C; --r10: #8EA6F2;
+  --shadow: 0 1px 0 rgba(35, 30, 24, .06);
   --font: 'Schibsted Grotesk Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --ease: cubic-bezier(.2, .8, .2, 1);
+  --spring: cubic-bezier(.34, 1.56, .64, 1);
   --accent: var(--ink);
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme='light']) {
-  --bg: #121316; --surface: #1B1D22; --ink: #F1EFEA; --ink-2: #C3C5CA; --muted: #8F939B; --line: #2C2F36;
-  --cell: #25282E; --cell-2: #33373F; --bad: #FF6B5E; --bad-soft: #4A2320;
-  --trace: #F0703F; --crowns: #9B82F0; --pairs: #5B93F2; --plots: #35B38F; --wind: #E8648F; --sym-a: #F2B13A;
-  --r0: #8F5142; --r1: #8C7030; --r2: #53783C; --r3: #346F87; --r4: #614F98; --r5: #8E4A70; --r6: #666054; --r7: #916030; --r8: #327A65; --r9: #485A96;
-  --shadow: 0 1px 0 rgba(0,0,0,.4);
+  --bg: #17130F; --surface: #221D18; --ink: #F3EBDD; --ink-2: #D0C5B3; --muted: #9A8F7F; --line: #372F27;
+  --cell: #2A241E; --cell-2: #3D352C; --grid: rgba(243, 235, 221, .1); --hole: #4A4136;
+  --edge: #8C7F6C; --bad: #FF7A63; --bad-soft: #55291F; --gold: #F7C543; --gold-2: #8A5A00; --on-region: #1E1914;
+  --trace: #F27C42; --crowns: #A68DF2; --pairs: #5D94EE; --plots: #3AB18E; --wind: #EC6B9A; --sym-a: #F6B53A;
+  --r0: #E0834A; --r1: #8F71DA; --r2: #4CA5DA; --r3: #75B65F; --r4: #DCB232; --r5: #DB5F6D; --r6: #3EB3A1; --r7: #BC7FD0; --r8: #AA9E80; --r9: #BCC44E; --r10: #6F89DC;
+  --shadow: 0 1px 0 rgba(0, 0, 0, .35);
   color-scheme: dark;
 } }
 :root[data-theme='dark'] {
-  --bg: #121316; --surface: #1B1D22; --ink: #F1EFEA; --ink-2: #C3C5CA; --muted: #8F939B; --line: #2C2F36;
-  --cell: #25282E; --cell-2: #33373F; --bad: #FF6B5E; --bad-soft: #4A2320;
-  --trace: #F0703F; --crowns: #9B82F0; --pairs: #5B93F2; --plots: #35B38F; --wind: #E8648F; --sym-a: #F2B13A;
-  --r0: #8F5142; --r1: #8C7030; --r2: #53783C; --r3: #346F87; --r4: #614F98; --r5: #8E4A70; --r6: #666054; --r7: #916030; --r8: #327A65; --r9: #485A96;
-  --shadow: 0 1px 0 rgba(0,0,0,.4);
+  --bg: #17130F; --surface: #221D18; --ink: #F3EBDD; --ink-2: #D0C5B3; --muted: #9A8F7F; --line: #372F27;
+  --cell: #2A241E; --cell-2: #3D352C; --grid: rgba(243, 235, 221, .1); --hole: #4A4136;
+  --edge: #8C7F6C; --bad: #FF7A63; --bad-soft: #55291F; --gold: #F7C543; --gold-2: #8A5A00; --on-region: #1E1914;
+  --trace: #F27C42; --crowns: #A68DF2; --pairs: #5D94EE; --plots: #3AB18E; --wind: #EC6B9A; --sym-a: #F6B53A;
+  --r0: #E0834A; --r1: #8F71DA; --r2: #4CA5DA; --r3: #75B65F; --r4: #DCB232; --r5: #DB5F6D; --r6: #3EB3A1; --r7: #BC7FD0; --r8: #AA9E80; --r9: #BCC44E; --r10: #6F89DC;
+  --shadow: 0 1px 0 rgba(0, 0, 0, .35);
   color-scheme: dark;
 }
 
@@ -102,7 +108,7 @@ a { color: inherit; }
 @media (min-height: 900px) { .stage { padding-top: 6vh; } }
 .board, .board-wait { -webkit-touch-callout: none; display: block; width: min(100%, 560px, calc(100dvh - 300px)); min-width: 240px; touch-action: none; user-select: none; -webkit-user-select: none; font-family: var(--font); }
 .board:focus { outline: none; }
-.board-wait { aspect-ratio: 1; border-radius: 22px; background: var(--cell); animation: wait 1.2s ease-in-out infinite alternate; }
+.board-wait { aspect-ratio: 1; border-radius: 16px; background: var(--cell); animation: wait 1.2s ease-in-out infinite alternate; }
 @keyframes wait { to { opacity: .45; } }
 .board.is-preview { width: 100%; min-width: 0; pointer-events: none; }
 .wind { width: min(100%, 560px, calc(100dvh - 420px)); min-width: 240px; }
@@ -126,75 +132,126 @@ a { color: inherit; }
 .result-actions { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-top: 12px; }
 
 /* board parts */
-.tile { fill: var(--cell); transition: fill .15s; }
+.board-edge { fill: none; stroke: var(--edge); stroke-width: 6; pointer-events: none; }
+.tile { fill: var(--cell); transition: fill .18s var(--ease); }
 .tile.is-given { fill: var(--cell-2); }
 .tile.is-bad { fill: var(--bad-soft); }
-.tile.is-on { fill: color-mix(in srgb, var(--trace) 20%, var(--cell)); }
+.grid-lines { fill: none; stroke: var(--grid); stroke-width: 2; pointer-events: none; }
 .focus-ring { fill: none; stroke: none; }
 .board:focus-visible .focus-ring { stroke: var(--ink); stroke-width: 5; }
-.hint-because { fill: none; stroke: var(--ink); stroke-width: 4; stroke-dasharray: 9 8; }
-.hint-cell { fill: color-mix(in srgb, var(--accent) 22%, transparent); stroke: var(--accent); stroke-width: 6; animation: pulse 1s ease-in-out infinite alternate; }
-@keyframes pulse { to { fill-opacity: .35; } }
-
-.region.r0 { fill: var(--r0); } .region.r1 { fill: var(--r1); } .region.r2 { fill: var(--r2); } .region.r3 { fill: var(--r3); } .region.r4 { fill: var(--r4); }
-.region.r5 { fill: var(--r5); } .region.r6 { fill: var(--r6); } .region.r7 { fill: var(--r7); } .region.r8 { fill: var(--r8); } .region.r9 { fill: var(--r9); }
-.grid-thin line { stroke: var(--ink); stroke-opacity: .22; stroke-width: 2; }
-.grid-thick line { stroke: var(--ink); stroke-width: 6; stroke-linecap: square; }
-.grid-edge { fill: none; stroke: var(--ink); stroke-width: 6; }
-.crown path { fill: var(--ink); stroke: var(--ink); stroke-width: 6; stroke-linejoin: round; transform-origin: center; transform-box: fill-box; animation: pop .16s var(--ease); }
-.crown.is-bad path { fill: var(--bad); stroke: var(--bad); }
-.cross { fill: none; stroke: var(--ink); stroke-opacity: .6; stroke-width: 6; stroke-linecap: round; }
-.cross.is-auto { stroke-opacity: .22; }
-@keyframes pop { from { transform: scale(.4); opacity: 0; } }
-
-.sym-a { fill: var(--sym-a); } .sym-b { fill: var(--pairs); }
-.sym-a, .sym-b { transform-origin: center; transform-box: fill-box; animation: pop .14s var(--ease); }
-.link circle { fill: var(--surface); stroke: var(--line); stroke-width: 2; }
-.link path { fill: none; stroke: var(--ink); stroke-width: 4; stroke-linecap: round; }
-.link.is-bad circle { fill: var(--bad); stroke: var(--bad); } .link.is-bad path { stroke: #fff; }
-
-.plot { stroke-width: 6; fill: color-mix(in srgb, var(--c) 30%, transparent); stroke: var(--c); animation: pop .16s var(--ease); transform-origin: center; transform-box: fill-box; }
-.plot.p0 { --c: var(--plots); } .plot.p1 { --c: var(--pairs); } .plot.p2 { --c: var(--sym-a); } .plot.p3 { --c: var(--wind); } .plot.p4 { --c: var(--crowns); } .plot.p5 { --c: var(--trace); }
-.plot.is-bad { --c: var(--bad); fill: color-mix(in srgb, var(--bad) 10%, transparent); stroke-dasharray: 14 10; }
-.plot-live.is-fit { stroke: var(--c); fill: color-mix(in srgb, var(--c) 25%, transparent); stroke-dasharray: none; }
-.plot-live.p0 { --c: var(--plots); } .plot-live.p1 { --c: var(--pairs); } .plot-live.p2 { --c: var(--sym-a); } .plot-live.p3 { --c: var(--wind); } .plot-live.p4 { --c: var(--crowns); } .plot-live.p5 { --c: var(--trace); }
-.plot-live { fill: color-mix(in srgb, var(--ink) 10%, transparent); stroke: var(--ink); stroke-width: 5; stroke-dasharray: 12 9; pointer-events: none; }
-.plot-size { font-weight: 800; font-size: 34px; text-anchor: middle; fill: var(--ink); paint-order: stroke; stroke: var(--bg); stroke-width: 10; }
-.clue rect, .clue-any { fill: var(--surface); stroke: var(--ink); stroke-width: 4; }
-.clue-any { stroke-dasharray: 7 6; }
-.clue text { font-weight: 800; font-size: 28px; text-anchor: middle; fill: var(--ink); }
-
-.trace-line { fill: none; stroke: var(--trace); stroke-width: 46; stroke-linecap: round; stroke-linejoin: round; }
-.trace-head { fill: var(--trace); stroke: var(--surface); stroke-width: 6; transition: r .12s var(--ease); }
-.trace-head.is-held { r: 26px; }
-.trace-tail { stroke-linecap: round; }
-.stop circle { transition: fill .15s; }
-.stop.is-reached circle { fill: var(--trace); }
-.walls line { stroke: var(--ink); stroke-width: 11; stroke-linecap: round; }
-.stop circle { fill: var(--ink); } .stop text { fill: var(--bg); font-weight: 800; font-size: 32px; text-anchor: middle; }
-
-.word-line, .sel-line { fill: none; stroke-width: 76; stroke-linecap: round; stroke-linejoin: round; }
-.word-line.w0 { stroke: var(--wind); } .word-line.w1 { stroke: var(--crowns); } .word-line.w2 { stroke: var(--pairs); } .word-line.w3 { stroke: var(--plots); }
-.word-line { animation: fade .25s var(--ease); }
+.hint-marks { pointer-events: none; animation: fade .2s var(--ease); }
+.hint-because { fill: none; stroke: var(--ink); stroke-opacity: .55; stroke-width: 5; }
+.hint-cell { fill: color-mix(in srgb, var(--accent) 24%, transparent); stroke: var(--accent); stroke-width: 6; animation: pulse .9s ease-in-out infinite alternate; }
+@keyframes pulse { to { fill-opacity: .4; stroke-opacity: .55; } }
+.hint-arrow path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.hint-arrow-under { stroke: var(--surface); stroke-width: 30; stroke-opacity: .9; }
+.hint-arrow-flow { stroke: var(--ink); stroke-width: 12; stroke-dasharray: 16 14; animation: flow .6s linear infinite; }
+.hint-arrow { animation: fade .25s var(--ease); }
+.hint-arrow .hint-arrow-head { fill: var(--ink); stroke: var(--surface); stroke-width: 6; animation: nudge .7s ease-in-out infinite alternate; }
+@keyframes flow { to { stroke-dashoffset: -30; } }
+@keyframes nudge { from { transform: translateX(-6px); } to { transform: translateX(4px); } }
 @keyframes fade { from { opacity: 0; } }
-.sel-line { stroke: var(--ink); }
-.letter { font-weight: 800; font-size: 44px; text-anchor: middle; fill: var(--ink); pointer-events: none; }
-.letter.is-found { fill: #fff; } .letter.is-sel { fill: var(--bg); }
+@keyframes pop { from { transform: scale(.4); opacity: 0; } }
+@keyframes spring { 0% { transform: scale(.2); opacity: 0; } 55% { transform: scale(1.14); opacity: 1; } 100% { transform: scale(1); } }
+@keyframes flip { 0% { transform: scaleX(0); } 60% { transform: scaleX(1.12); } 100% { transform: scaleX(1); } }
+@keyframes shake { 20% { transform: translateX(-9px); } 40% { transform: translateX(8px); } 60% { transform: translateX(-5px); } 80% { transform: translateX(3px); } }
+
+/* crowns */
+.region { transition: filter .2s; }
+.region.r0 { fill: var(--r0); } .region.r1 { fill: var(--r1); } .region.r2 { fill: var(--r2); } .region.r3 { fill: var(--r3); } .region.r4 { fill: var(--r4); } .region.r5 { fill: var(--r5); }
+.region.r6 { fill: var(--r6); } .region.r7 { fill: var(--r7); } .region.r8 { fill: var(--r8); } .region.r9 { fill: var(--r9); } .region.r10 { fill: var(--r10); }
+.grid-thin { fill: none; stroke: var(--on-region); stroke-opacity: .2; stroke-width: 2; }
+.grid-thick { fill: none; stroke: var(--on-region); stroke-width: 5; stroke-linecap: square; }
+.crown path { fill: var(--on-region); stroke: var(--on-region); stroke-width: 5; stroke-linejoin: round; transform-origin: center; transform-box: fill-box; animation: spring .32s var(--ease); transition: fill .2s, stroke .2s; }
+.crown circle { fill: var(--cell); }
+.crown.is-bad path { fill: var(--bad); stroke: var(--bad); animation: spring .32s var(--ease), shake .4s var(--ease) .3s; }
+.cross { fill: none; stroke: var(--on-region); stroke-opacity: .62; stroke-width: 6; stroke-linecap: round; transform-origin: center; transform-box: fill-box; animation: crossIn .2s var(--spring); }
+.cross.is-auto { stroke-opacity: .24; animation: fade .3s var(--ease); }
+@keyframes crossIn { from { transform: scale(.3) rotate(-60deg); opacity: 0; } }
+.is-won .crown path { animation: gold .6s var(--spring) var(--d, 0ms) both; }
+@keyframes gold {
+  0% { fill: var(--on-region); stroke: var(--on-region); transform: scale(1); }
+  45% { transform: scale(1.3) rotate(-6deg); }
+  100% { fill: var(--gold); stroke: var(--gold-2); transform: scale(1.12); }
+}
+
+/* pairs */
+.sym { transform-origin: center; transform-box: fill-box; animation: flip .26s var(--ease); }
+.sym-a { fill: var(--sym-a); stroke: color-mix(in srgb, var(--sym-a) 70%, var(--ink)); stroke-width: 4; }
+.sym-b { fill: var(--pairs); stroke: color-mix(in srgb, var(--pairs) 70%, var(--ink)); stroke-width: 4; }
+.sym-shine { fill: #fff; fill-opacity: .35; pointer-events: none; }
+.given-mark { fill: var(--ink); fill-opacity: .2; }
+.link circle { fill: var(--surface); stroke: var(--ink); stroke-opacity: .35; stroke-width: 2.5; }
+.link path { fill: none; stroke: var(--ink); stroke-width: 4.5; stroke-linecap: round; }
+.link.is-bad circle { fill: var(--bad); stroke: var(--bad); stroke-opacity: 1; } .link.is-bad path { stroke: #fff; }
+.link.is-bad { animation: shake .4s var(--ease); transform-box: fill-box; }
+
+/* plots */
+.plot { fill: var(--c); stroke: color-mix(in srgb, var(--c) 55%, var(--on-region)); stroke-width: 6; transform-origin: center; transform-box: fill-box; animation: spring .3s var(--ease); }
+.plot.is-bad { fill: color-mix(in srgb, var(--ink) 16%, var(--cell)); stroke: color-mix(in srgb, var(--ink) 45%, transparent); animation: spring .3s var(--ease), shake .42s var(--ease) .2s; }
+.plot-live { fill: color-mix(in srgb, var(--ink) 12%, transparent); stroke: color-mix(in srgb, var(--ink) 55%, transparent); stroke-width: 5; pointer-events: none; transition: x .08s, y .08s, width .08s, height .08s; }
+.plot-live.is-fit { fill: color-mix(in srgb, var(--c) 70%, transparent); stroke: color-mix(in srgb, var(--c) 55%, var(--on-region)); }
+.p0 { --c: var(--r0); } .p1 { --c: var(--r2); } .p2 { --c: var(--r3); } .p3 { --c: var(--r1); } .p4 { --c: var(--r4); } .p5 { --c: var(--r5); }
+.p6 { --c: var(--r6); } .p7 { --c: var(--r7); } .p8 { --c: var(--r10); } .p9 { --c: var(--r9); } .p10 { --c: var(--r8); }
+.plot-size { font-weight: 800; font-size: 34px; text-anchor: middle; fill: var(--ink); paint-order: stroke; stroke: var(--cell); stroke-width: 10; pointer-events: none; }
+.clue .badge { fill: #FFFBF3; stroke: var(--on-region); stroke-width: 4; transition: stroke .2s; }
+.clue.is-open .badge { stroke: color-mix(in srgb, var(--c) 70%, var(--ink)); stroke-width: 5; }
+.clue.is-any .badge { stroke-dasharray: 8 6; }
+.clue text { font-weight: 800; font-size: 28px; text-anchor: middle; fill: #231E18; pointer-events: none; }
+.plots { width: min(100%, 560px, calc(100dvh - 340px)); min-width: 240px; }
+.plots .board { width: 100%; min-width: 0; }
+.legend { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; color: var(--ink-2); font-size: 13.5px; font-weight: 600; }
+.legend li { display: flex; align-items: center; gap: 6px; }
+.legend svg { width: 22px; height: 22px; }
+.legend rect { fill: none; stroke: currentColor; stroke-width: 2; }
+.legend .any { stroke-dasharray: 3 2.5; }
+
+/* trace */
+.trace-seg { fill: none; stroke-width: 42; stroke-linecap: round; }
+.trace-head { stroke: var(--cell); stroke-width: 7; pointer-events: none; }
+.trace-ring { fill: none; stroke-width: 5; opacity: 0; pointer-events: none; }
+.trace-ring.is-held { animation: ring 1s ease-out infinite; }
+@keyframes ring { 0% { opacity: .6; r: 26px; } 100% { opacity: 0; r: 46px; } }
+.trace-tail { stroke-width: 42; stroke-linecap: round; pointer-events: none; opacity: 0; }
+.is-won .trace-segs { animation: glow 1.2s var(--ease); }
+@keyframes glow { 40% { filter: brightness(1.25) saturate(1.2); } }
+.trace-sweep { fill: none; stroke: #fff; stroke-opacity: .6; stroke-width: 16; stroke-linecap: round; stroke-dasharray: .12 1.3; pointer-events: none; animation: sweep 1.2s cubic-bezier(.45, 0, .3, 1) .1s both; }
+@keyframes sweep { from { stroke-dashoffset: .12; } to { stroke-dashoffset: -1; } }
+.walls path { fill: none; stroke: var(--ink); stroke-width: 12; stroke-linecap: round; }
+.stop circle { fill: var(--ink); transition: transform .2s var(--spring); transform-origin: center; transform-box: fill-box; }
+.stop text { fill: var(--bg); font-weight: 800; font-size: 32px; text-anchor: middle; pointer-events: none; }
+.stop.is-reached circle { stroke: var(--cell); stroke-width: 5; }
+
+/* wind */
+.hole { fill: var(--hole); }
+.hole-edge { fill: none; stroke: var(--edge); stroke-width: 6; stroke-linecap: round; }
+.word-line, .sel-line { fill: none; stroke-width: 74; stroke-linecap: round; stroke-linejoin: round; }
+.word-line { stroke: var(--c); stroke-dasharray: 1; animation: draw .45s var(--ease) both; }
+@keyframes draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.sel-line { stroke: color-mix(in srgb, var(--wind) 75%, var(--ink)); }
+.wind-board.is-wrong .sel-line { stroke: var(--bad); }
+.wind-board.is-wrong .board { animation: shake .4s var(--ease); }
+.letter { font-weight: 800; font-size: 44px; text-anchor: middle; fill: var(--ink); pointer-events: none; transition: fill .15s; }
+.letter.is-sel { fill: #fff; }
+.letter.is-found { fill: #fff; transition: fill .2s var(--ease) .15s; }
 .word-start { fill: var(--wind); }
-.wind-theme { text-align: center; font-weight: 750; font-size: 20px; letter-spacing: -.015em; margin-bottom: 8px; }
-.wind-note { text-align: center; font-weight: 700; letter-spacing: .08em; min-height: 1.5em; margin-top: 6px; font-size: 16px; }
-.wind-note.is-bad { letter-spacing: 0; font-weight: 500; color: var(--ink-2); }
-.wind-words { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 14px; margin-top: 6px; }
-.wind-words li { display: flex; gap: 3px; }
-.wind-words span { width: 22px; height: 28px; border-radius: 6px; background: var(--cell); display: grid; place-items: center; font-weight: 800; font-size: 14px; color: #fff; }
-.wind-words .is-found.w0 span { background: var(--wind); } .wind-words .is-found.w1 span { background: var(--crowns); }
-.wind-words .is-found.w2 span { background: var(--pairs); } .wind-words .is-found.w3 span { background: var(--plots); }
+.wind-theme { text-align: center; font-weight: 750; font-size: 20px; letter-spacing: -.015em; margin-bottom: 10px; }
+.wind-note { text-align: center; font-weight: 750; letter-spacing: .08em; min-height: 1.5em; margin-top: 8px; font-size: 17px; }
+.wind-note.is-bad { letter-spacing: 0; font-weight: 550; color: var(--bad); animation: shake .4s var(--ease); }
+.wind-words { display: grid; justify-content: center; gap: 6px; margin-top: 6px; }
+.wind-words li { display: flex; gap: 4px; }
+.wind-words span { width: 24px; height: 26px; border-radius: 7px; background: var(--cell-2); display: grid; place-items: center; font-weight: 800; font-size: 14px; color: #fff; transition: background .2s; }
+.wind-words .is-found span { background: var(--c); animation: spring .3s var(--ease) both; }
+.wind-words .is-found span:nth-child(2) { animation-delay: 30ms; } .wind-words .is-found span:nth-child(3) { animation-delay: 60ms; }
+.wind-words .is-found span:nth-child(4) { animation-delay: 90ms; } .wind-words .is-found span:nth-child(5) { animation-delay: 120ms; }
+.wind-words .is-found span:nth-child(n+6) { animation-delay: 150ms; }
+.w0 { --c: var(--r0); } .w1 { --c: var(--r2); } .w2 { --c: var(--r1); } .w3 { --c: var(--r3); } .w4 { --c: var(--r5); } .w5 { --c: var(--r6); }
 
 .play.is-done .board { animation: solved .6s var(--ease); }
 @keyframes solved { 35% { transform: scale(1.02); } }
 /* the win: a light wave sweeps across the board from the top-left corner */
-.play.is-done .board .tile, .play.is-done .board .region { animation: wave .55s var(--ease) var(--d, 0ms) both; }
-@keyframes wave { 40% { filter: brightness(1.18) saturate(1.15); } }
+.play.is-done .board .tile, .play.is-done .board .region, .play.is-done .board .plot { animation: wave .6s var(--ease) var(--d, 0ms) both; }
+@keyframes wave { 40% { filter: brightness(1.15) saturate(1.15); } }
 
 /* sheets */
 .sheet { border: 0; padding: 0; background: transparent; color: inherit; width: min(100%, 460px); max-width: 100%; margin: auto auto 0; max-height: 92dvh; }

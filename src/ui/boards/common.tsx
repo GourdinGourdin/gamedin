@@ -1,9 +1,11 @@
-import React, { useCallback, useState, type ReactNode, type SVGProps } from 'react';
+import React, { useCallback, useId, useState, type ReactNode, type SVGProps } from 'react';
 import type { Settings } from '../../store.ts';
 
 /** Cell size in SVG units. */
 export const U = 100;
 const PAD = 6;
+/** Corner radius of the board. */
+export const RADIUS = 20;
 
 export interface Hint {
   text: string;
@@ -13,6 +15,8 @@ export interface Hint {
   cells: number[];
   /** applies the hint to a state */
   apply?: (state: any) => any;
+  /** a route to draw as a moving arrow, cell by cell */
+  arrow?: number[];
 }
 
 export interface BoardProps<P, S, Sol> {
@@ -88,38 +92,75 @@ export function useGridFocus(rows: number, cols: number) {
   return { focus, setFocus, move };
 }
 
+/** The board: a rounded frame whose cells meet edge to edge, with one outline round it. */
 export function Frame({ rows, cols, preview, label, children, className, ...rest }:
   { rows: number; cols: number; preview?: boolean; label: string } & SVGProps<SVGSVGElement>) {
+  const clip = `clip${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   return (
     <svg className={className ?? `board${preview ? ' is-preview' : ''}`} onContextMenu={(e) => e.preventDefault()} viewBox={`${-PAD} ${-PAD} ${cols * U + PAD * 2} ${rows * U + PAD * 2}`}
       role={preview ? 'img' : 'application'} aria-label={label} tabIndex={preview ? undefined : 0} {...rest}>
-      {children}
+      <defs><clipPath id={clip}><rect width={cols * U} height={rows * U} rx={RADIUS} /></clipPath></defs>
+      <g clipPath={`url(#${clip})`}>{children}</g>
+      <rect className="board-edge" width={cols * U} height={rows * U} rx={RADIUS} />
     </svg>
   );
 }
 
 export function FocusRing({ cols, cell }: { cols: number; cell: number }) {
   const [x, y] = xy(cols, cell);
-  return <rect className="focus-ring" x={x + 5} y={y + 5} width={U - 10} height={U - 10} rx={16} />;
+  return <rect className="focus-ring" x={x + 6} y={y + 6} width={U - 12} height={U - 12} rx={12} />;
+}
+
+/** Path through cell centres. */
+export const route = (cols: number, cells: number[]) => cells.map((c, i) => `${i ? 'L' : 'M'}${mid(cols, c).join(' ')}`).join(' ');
+
+/** A moving arrow along a route of cells: dashes flow toward the arrowhead,
+ *  which stops just short of the last cell's centre so it never hides a clue. */
+export function Arrow({ cols, cells }: { cols: number; cells: number[] }) {
+  if (cells.length < 2) return null;
+  const pts = cells.map((c) => mid(cols, c));
+  const [ax, ay] = pts[pts.length - 2], [bx, by] = pts[pts.length - 1];
+  const len = Math.hypot(bx - ax, by - ay), ux = (bx - ax) / len, uy = (by - ay) / len;
+  const ex = bx - ux * 34, ey = by - uy * 34;
+  pts[pts.length - 1] = [ex, ey];
+  const d = pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x} ${y}`).join(' ');
+  const ang = (Math.atan2(uy, ux) * 180) / Math.PI;
+  return (
+    <g className="hint-arrow" aria-hidden="true">
+      <path className="hint-arrow-under" d={d} />
+      <path className="hint-arrow-flow" d={d} />
+      <g transform={`translate(${ex} ${ey}) rotate(${ang})`}><path className="hint-arrow-head" d="M-6 -22 L20 0 L-6 22 Z" /></g>
+    </g>
+  );
 }
 
 export function HintMarks({ hint, cols }: { hint: Hint | null; cols: number }) {
   if (!hint) return null;
   return (
     <g className="hint-marks">
-      {hint.because.map((i) => { const [x, y] = xy(cols, i); return <rect key={`b${i}`} className="hint-because" x={x + 9} y={y + 9} width={U - 18} height={U - 18} rx={14} />; })}
-      {hint.cells.map((i) => { const [x, y] = xy(cols, i); return <rect key={`c${i}`} className="hint-cell" x={x + 7} y={y + 7} width={U - 14} height={U - 14} rx={15} />; })}
+      {hint.because.map((i) => { const [x, y] = xy(cols, i); return <rect key={`b${i}`} className="hint-because" x={x + 7} y={y + 7} width={U - 14} height={U - 14} rx={12} />; })}
+      {hint.cells.map((i) => { const [x, y] = xy(cols, i); return <rect key={`c${i}`} className="hint-cell" x={x + 5} y={y + 5} width={U - 10} height={U - 10} rx={12} />; })}
+      {hint.arrow && <Arrow cols={cols} cells={hint.arrow} />}
     </g>
   );
 }
 
-/** Rounded cell tiles, the base layer of most boards. */
+/** Wave delay for the win animation: it runs from the top-left corner. */
+export const waveDelay = (cols: number, i: number) => ({ '--d': `${(Math.floor(i / cols) + (i % cols)) * 40}ms` }) as React.CSSProperties;
+
+/** Square cells edge to edge, with hairlines between them. */
 export function Tiles({ rows, cols, className }: { rows: number; cols: number; className?: (i: number) => string }) {
   const out = [];
   for (let i = 0; i < rows * cols; i++) {
     const [x, y] = xy(cols, i);
-    out.push(<rect key={i} className={`tile ${className?.(i) ?? ''}`} x={x + 4} y={y + 4} width={U - 8} height={U - 8} rx={16}
-      style={{ '--d': `${(Math.floor(i / cols) + (i % cols)) * 45}ms` } as React.CSSProperties} />);
+    out.push(<rect key={i} className={`tile ${className?.(i) ?? ''}`} x={x} y={y} width={U} height={U} style={waveDelay(cols, i)} />);
   }
-  return <g>{out}</g>;
+  return <g>{out}<GridLines rows={rows} cols={cols} /></g>;
+}
+
+export function GridLines({ rows, cols }: { rows: number; cols: number }) {
+  let d = '';
+  for (let c = 1; c < cols; c++) d += `M${c * U} 0V${rows * U}`;
+  for (let r = 1; r < rows; r++) d += `M0 ${r * U}H${cols * U}`;
+  return <path className="grid-lines" d={d} />;
 }

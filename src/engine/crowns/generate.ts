@@ -31,36 +31,63 @@ function neighbours(N: number, i: number): number[] {
   return out;
 }
 
-// Region style, from 667 past daily boards: a couple of tiny regions (1 to 3
-// cells) on every board, several regions that run along a row or column, and
-// a few large sprawling ones.
+// Region style, measured on 608 past daily boards. Sorted region sizes on an
+// 8x8 board average 23, 11, 8, 6, 5, 4, 3.5, 2.6 cells: one big region that
+// wraps around the others, one medium, the rest small, and a one-cell region
+// on about one board in four. Borders are irregular (about 0.72 border edges
+// per cell): blocks, bars along a row or column and winding strips mixed.
+const PROFILE = [0.36, 0.17, 0.12, 0.1, 0.08, 0.07, 0.055, 0.04];
+
+function targets(N: number, r: Rng): number[] {
+  const t: number[] = [];
+  for (let k = 0; k < N; k++) {
+    const x = (k / (N - 1)) * (PROFILE.length - 1), i = Math.min(PROFILE.length - 2, Math.floor(x));
+    const f = PROFILE[i] + (PROFILE[i + 1] - PROFILE[i]) * (x - i);
+    t.push(f * (8 / N) * (0.75 + 0.5 * r()));
+  }
+  const sum = t.reduce((a, b) => a + b, 0);
+  return t.map((f) => Math.max(1, Math.round((f / sum) * N * N)));
+}
+
+type Style = 'block' | 'bar' | 'wind' | 'free';
+
 function growRegions(N: number, cols: number[], r: Rng): number[] {
   const reg = new Array<number>(N * N).fill(-1), size = new Array<number>(N).fill(1);
-  const ids = shuffle(r, [...Array(N).keys()]);
-  const cap = new Array<number>(N).fill(Infinity);
-  const tiny = (N >= 10 ? 2 : 1) + (r() < 0.35 ? 1 : 0);
-  ids.slice(0, tiny).forEach((k) => { cap[k] = 1 + randInt(r, 3); });
-  // 0 = no preference, 1 = along its row, 2 = along its column
-  const dir = cols.map(() => (r() < 0.5 ? 1 + randInt(r, 2) : 0));
-  const weight = cols.map(() => 0.45 + 1.3 * r() ** 1.4);
+  const goal = shuffle(r, targets(N, r));
+  if (r() < 0.25) goal[goal.indexOf(Math.min(...goal))] = 1;
+  const style: Style[] = goal.map((g) => {
+    if (g <= 1) return 'free';
+    const x = r();
+    return g >= N * N * 0.25 ? (x < 0.75 ? 'wind' : 'free') : x < 0.3 ? 'block' : x < 0.55 ? 'bar' : 'wind';
+  });
+  const axis = cols.map(() => 1 + randInt(r, 2));
   cols.forEach((c, row) => { reg[row * N + c] = row; });
+  const inside = (i: number, k: number) => neighbours(N, i).filter((j) => reg[j] === k).length;
   for (let left = N * N - N; left > 0; left--) {
-    let opts: [number, number, number][] = [];
-    for (let pass = 0; pass < 2 && !opts.length; pass++) {
-      for (let i = 0; i < N * N; i++) {
-        if (reg[i] !== -1) continue;
-        for (const j of neighbours(N, i)) {
-          const k = reg[j];
-          if (k === -1 || (pass === 0 && size[k] >= cap[k])) continue;
-          const along = Math.abs(i - j) === 1 ? 1 : 2;
-          opts.push([i, k, weight[k] * (dir[k] === along ? 5 : dir[k] ? 0.4 : 1)]);
-        }
-      }
+    // which region grows: the one furthest below its goal, weighted
+    const front: number[][] = Array.from({ length: N }, () => []);
+    for (let i = 0; i < N * N; i++) {
+      if (reg[i] !== -1) continue;
+      for (const j of neighbours(N, i)) if (reg[j] !== -1 && !front[reg[j]].includes(i)) front[reg[j]].push(i);
     }
-    let x = r() * opts.reduce((a, o) => a + o[2], 0), chosen = opts[opts.length - 1];
-    for (const o of opts) { x -= o[2]; if (x <= 0) { chosen = o; break; } }
-    reg[chosen[0]] = chosen[1];
-    size[chosen[1]]++;
+    const want = front.map((f, k) => (f.length ? Math.max(0.02, goal[k] - size[k]) ** 1.5 : 0));
+    let x = r() * want.reduce((a, b) => a + b, 0), k = want.findIndex((w) => w > 0);
+    for (let q = 0; q < N; q++) { x -= want[q]; if (want[q] > 0 && x <= 0) { k = q; break; } }
+    const opts = front[k].map((i) => {
+      const n = inside(i, k);
+      let w = 1;
+      if (style[k] === 'block') w = n >= 2 ? 6 : 1;
+      else if (style[k] === 'wind') w = n >= 2 ? 0.25 : 1;
+      else if (style[k] === 'bar') {
+        const along = neighbours(N, i).some((j) => reg[j] === k && (Math.abs(i - j) === 1 ? 1 : 2) === axis[k]);
+        w = along ? 6 : 0.3;
+      }
+      return [i, w] as const;
+    });
+    let y = r() * opts.reduce((a, o) => a + o[1], 0), cell = opts[opts.length - 1][0];
+    for (const [i, w] of opts) { y -= w; if (y <= 0) { cell = i; break; } }
+    reg[cell] = k;
+    size[k]++;
   }
   return reg;
 }
@@ -104,11 +131,18 @@ export function buildCrowns(N: number, r: Rng): { puzzle: CrownsPuzzle; solution
   return null;
 }
 
-/** Shape check: no more than two one-cell regions. */
-function looksGood(p: CrownsPuzzle): boolean {
-  const size = new Array<number>(p.size).fill(0);
-  for (const k of p.regions) size[k]++;
-  return size.filter((s) => s === 1).length <= (p.size >= 9 ? 2 : 1);
+/** Shape check against the past boards: few tiny regions, irregular borders. */
+function looksGood(p: CrownsPuzzle, r: Rng, loose: boolean): boolean {
+  const N = p.size, R = p.regions, size = new Array<number>(N).fill(0);
+  for (const k of R) size[k]++;
+  const ones = size.filter((s) => s === 1).length, small = size.filter((s) => s <= 3).length;
+  if (ones > 1 || (ones === 1 && !loose && r() < 0.5) || small > (N >= 8 && !loose ? 2 : 3)) return false;
+  let border = 0;
+  for (let i = 0; i < N * N; i++) {
+    if (i % N < N - 1 && R[i] !== R[i + 1]) border++;
+    if (i < N * N - N && R[i] !== R[i + N]) border++;
+  }
+  return border / (N * N) >= (loose ? 0.56 : 0.62);
 }
 
 export const CROWNS_SIZES = [7, 8, 9, 10, 11];
@@ -119,7 +153,7 @@ export function generateCrowns(size: number, difficulty: Difficulty, seed: strin
   let best: CrownsGame | null = null, bestGap = 9;
   for (let attempt = 0; attempt < 400; attempt++) {
     const b = buildCrowns(size, r);
-    if (!b || !looksGood(b.puzzle)) continue;
+    if (!b || !looksGood(b.puzzle, r, attempt > 120)) continue;
     const grade = gradeCrowns(b.puzzle);
     if (!grade.solved) continue;
     const gap = Math.abs(ORDER.indexOf(grade.difficulty) - ORDER.indexOf(difficulty));

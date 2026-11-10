@@ -33,13 +33,13 @@ export const META: Record<GameId, GameMeta> = {
   },
   plots: {
     id: 'plots', name: 'Plots', rule: 'Cut the grid into rectangles, one clue each.',
-    how: ['Drag to draw a rectangle. Every rectangle holds exactly one clue.', 'The number is how many cells it covers. The outline shows its shape: square, tall or wide.', 'Cover the whole grid with no overlaps. Tap a rectangle to remove it.'],
+    how: ['Drag to draw a rectangle. Every rectangle holds exactly one clue.', 'The number is how many cells it covers. The outline shows its shape: square, tall or wide.', 'Cover the whole grid with no overlaps. Drag from a rectangle to stretch or shrink it, tap it to remove it.'],
     sizes: [5, 6, 7, 8], defaultSize: 6, sizeLabel: grid,
   },
   wind: {
     id: 'wind', name: 'Wind', rule: 'Find the hidden words that fill the grid.',
-    how: ['Drag through neighbouring tiles to spell a word. Words bend up, down, left and right.', 'All the words share one theme, and together they use every tile once.', 'The bars under the grid show how long each word is.'],
-    sizes: [4, 5, 6], defaultSize: 5, sizeLabel: grid,
+    how: ['Drag through neighbouring tiles to spell a word. Words bend up, down, left and right.', 'All the words share one theme, and together they use every letter tile once. Grey blocks are not part of any word.', 'The bars under the grid show how long each word is.'],
+    sizes: [5, 6, 7], defaultSize: 5, sizeLabel: grid,
   },
 };
 

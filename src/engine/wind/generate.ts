@@ -3,7 +3,7 @@
 // other set of common words fills the same grid.
 import { makeRng, randInt, shuffle, type Rng } from '../rng.ts';
 import type { Difficulty, Grade } from '../types.ts';
-import { randomPath } from '../trace/generate.ts';
+import { holePattern, openPath } from './holes.ts';
 import { solveAllWind, type WindDict, type WindPuzzle } from './solve.ts';
 import { THEMES } from './themes.ts';
 import { WORDS_PACKED } from './words.ts';
@@ -15,7 +15,7 @@ export interface WindGamePuzzle extends WindPuzzle {
   showTheme: boolean;
 }
 export interface WindGame { puzzle: WindGamePuzzle; /** paths and words, longest word first */ solution: { paths: number[][]; words: string[] }; grade: Grade }
-export const WIND_SIZES = [4, 5, 6];
+export const WIND_SIZES = [5, 6, 7];
 
 let cached: WindDict | null = null;
 export function windDict(): WindDict {
@@ -35,29 +35,42 @@ export function windDict(): WindDict {
   return (cached = { words: [...set] });
 }
 
-/** Words from `pool` whose lengths add up to `total`, using `min`..`max` words. */
+/** Words from `pool` whose lengths add up to `total`, using `min`..`max` words,
+ *  never three of the same length (daily boards climb in length). */
 function pickWords(pool: string[], total: number, min: number, max: number, r: Rng): string[] | null {
-  const words = shuffle(r, pool.slice()), out: string[] = [];
+  const words = shuffle(r, pool.slice()), out: string[] = [], byLen = new Map<number, number>();
+  let budget = 20000;
   const go = (i: number, left: number): boolean => {
     if (left === 0) return out.length >= min;
-    if (i === words.length || out.length === max || left < 3) return false;
-    if (words[i].length <= left) { out.push(words[i]); if (go(i + 1, left - words[i].length)) return true; out.pop(); }
+    if (--budget < 0 || i === words.length || out.length === max || left < 3) return false;
+    const w = words[i], n = byLen.get(w.length) ?? 0;
+    if (w.length <= left && n < 2) {
+      out.push(w); byLen.set(w.length, n + 1);
+      if (go(i + 1, left - w.length)) return true;
+      out.pop(); byLen.set(w.length, n);
+    }
     return go(i + 1, left);
   };
   return go(0, total) ? out : null;
 }
 
-const COUNT: Record<number, [number, number]> = { 4: [3, 3], 5: [4, 5], 6: [5, 7] };
+// Past boards: 5x5 to 7x7, four words (sometimes five on big boards), with
+// symmetric blocked areas taking 15 to 40% of the grid.
+const COUNT: Record<number, [number, number]> = { 5: [4, 4], 6: [4, 5], 7: [4, 5] };
 const key = (path: number[]) => path.slice().sort((a, b) => a - b).join(',');
 
 export function generateWind(size: number, difficulty: Difficulty, seed: string): WindGame {
   const r = makeRng(`wind/${size}/${difficulty}/${seed}`), N = size, n = N * N, dict = windDict();
-  const [min, max] = COUNT[N] ?? [Math.round(n / 7), Math.round(n / 5)];
+  const [min, max] = COUNT[N] ?? [4, 5];
   for (let attempt = 0; attempt < 400; attempt++) {
+    const hole = holePattern(N, r, N === 5 && r() < 0.15);
+    const open = n - hole.reduce((a, b) => a + b, 0);
     const theme = THEMES[randInt(r, THEMES.length)];
-    const words = pickWords(theme.words, n, min, max, r);
+    const words = pickWords(theme.words, open, min, max, r);
     if (!words) continue;
-    const path = randomPath(N, r), letters = new Array<string>(n), paths: number[][] = [];
+    const path = openPath(N, hole, r);
+    if (!path) continue;
+    const letters = new Array<string>(n).fill(''), paths: number[][] = [];
     let at = 0;
     for (const w of words) {
       const cells = path.slice(at, at + w.length);

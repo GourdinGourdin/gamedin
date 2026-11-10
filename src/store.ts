@@ -29,6 +29,7 @@ function load(): Data {
 let data = load();
 const subs = new Set<() => void>();
 function commit(next: Data) {
+  if (pending) { clearTimeout(pending); pending = null; }
   data = next;
   try { localStorage.setItem(KEY, JSON.stringify(data)); } catch { /* storage full or blocked */ }
   subs.forEach((f) => f());
@@ -40,10 +41,24 @@ export const getStore = () => data;
 export const setSettings = (patch: Partial<Settings>) => commit({ ...data, settings: { ...data.settings, ...patch } });
 export const setPref = (game: GameId, size: number, difficulty: Difficulty) =>
   setSettings({ prefs: { ...data.settings.prefs, [game]: { size, difficulty } } });
+// Progress changes on every move, so it is kept in memory at once and written
+// to storage a moment later, off the drag. Nothing on screen listens to it.
+let pending: ReturnType<typeof setTimeout> | null = null;
+const flush = () => {
+  if (pending) clearTimeout(pending);
+  pending = null;
+  try { localStorage.setItem(KEY, JSON.stringify(data)); } catch { /* storage full or blocked */ }
+};
+if (typeof window !== 'undefined') {
+  window.addEventListener('pagehide', flush);
+  document.addEventListener('visibilitychange', () => { if (document.hidden && pending) flush(); });
+}
 export const saveProgress = (game: GameId, p: Progress | null) => {
   const progress = { ...data.progress };
   if (p) progress[game] = p; else delete progress[game];
-  commit({ ...data, progress });
+  data = { ...data, progress };
+  if (!p) { flush(); return; }
+  if (!pending) pending = setTimeout(flush, 600);
 };
 export const addResult = (r: Result) => commit({ ...data, results: [...data.results, r].slice(-2000) });
 export const resetAll = () => commit(fresh());

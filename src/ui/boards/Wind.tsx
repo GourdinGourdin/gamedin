@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { WindGamePuzzle } from '../../engine/wind/generate.ts';
-import { buzz, cellAt, cellInside, Frame, gridPoint, samples, HintMarks, mid, Tiles, U, type BoardProps, type GameUI, type Hint } from './common.tsx';
+import { buzz, cellAt, cellInside, Frame, gridPoint, samples, HintMarks, mid, route, Tiles, U, xy, type BoardProps, type GameUI, type Hint } from './common.tsx';
 
 interface Sol { paths: number[][]; words: string[] }
 /** found: indexes of solved words; starts: indexes of words whose first tile a hint revealed */
@@ -12,9 +12,13 @@ function Board({ puzzle: p, solution: sol, state, set, done, hint, preview }: Bo
   const { rows, cols } = p, ref = useRef<SVGSVGElement>(null);
   const [sel, setSel] = useState<number[]>([]);
   const [note, setNote] = useState<{ text: string; bad: boolean } | null>(null);
+  const [wrong, setWrong] = useState(false);
+  const wrongTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const press = useRef<{ grew: boolean; pt: { x: number; y: number } } | null>(null), live = useRef(sel);
   live.current = sel;
   useEffect(() => { setSel([]); setNote(null); }, [p]);
+  useEffect(() => () => { if (wrongTimer.current) clearTimeout(wrongTimer.current); }, []);
+  const isHole = (c: number) => !p.letters[c];
 
   const owner = new Map<number, number>();
   state.found.forEach((w) => sol.paths[w].forEach((c) => owner.set(c, w)));
@@ -24,14 +28,18 @@ function Board({ puzzle: p, solution: sol, state, set, done, hint, preview }: Bo
   const submit = (path: number[]) => {
     const word = path.map((c) => p.letters[c]).join('');
     const i = sol.words.findIndex((w, k) => !state.found.includes(k) && w === word && sameCells(sol.paths[k], path));
-    update([]);
-    if (i !== -1) { setNote(null); buzz(18); set({ ...state, found: [...state.found, i] }); return; }
+    if (i !== -1) { update([]); setNote(null); buzz(18); set({ ...state, found: [...state.found, i] }); return; }
     const rightWord = sol.words.some((w, k) => !state.found.includes(k) && w === word);
     setNote({ bad: true, text: rightWord ? `${word} is in here, but on other tiles.` : path.length < 3 ? 'Words have at least three letters.' : `${word} is not one of the words.` });
+    // the wrong word shakes red for a moment, then lets go
+    buzz(30);
+    setWrong(true);
+    if (wrongTimer.current) clearTimeout(wrongTimer.current);
+    wrongTimer.current = setTimeout(() => { setWrong(false); update([]); }, 420);
   };
   const step = (cell: number): boolean => {
     const cur = live.current, at = cur.indexOf(cell);
-    if (owner.has(cell)) return false;
+    if (owner.has(cell) || isHole(cell)) return false;
     if (at !== -1) { if (at < cur.length - 1) { update(cur.slice(0, at + 1)); return true; } return false; }
     if (cur.length && near(cur[cur.length - 1], cell)) { update([...cur, cell]); return true; }
     return false;
@@ -39,9 +47,10 @@ function Board({ puzzle: p, solution: sol, state, set, done, hint, preview }: Bo
   const down = (e: React.PointerEvent) => {
     if (done) return;
     const cell = cellAt(ref.current!, e, rows, cols);
-    if (cell < 0 || owner.has(cell)) return;
+    if (cell < 0 || owner.has(cell) || isHole(cell)) return;
     ref.current!.setPointerCapture(e.pointerId);
     setNote(null);
+    if (wrong) { setWrong(false); if (wrongTimer.current) clearTimeout(wrongTimer.current); }
     const cur = live.current;
     // tapping the last tile again sends the word
     if (cur.length >= 2 && cur[cur.length - 1] === cell) { submit(cur); return; }
@@ -65,22 +74,37 @@ function Board({ puzzle: p, solution: sol, state, set, done, hint, preview }: Bo
     if (pr?.grew && live.current.length >= 2) submit(live.current);
   };
 
-  const line = (path: number[]) => path.map((c, i) => `${i ? 'L' : 'M'}${mid(cols, c).join(' ')}`).join(' ');
+  const line = (path: number[]) => route(cols, path);
+  // blocked tiles: grey, with an outline where they meet letter tiles
+  let holeEdge = '';
+  const holes: number[] = [];
+  for (let c = 0; c < rows * cols; c++) {
+    if (!isHole(c)) continue;
+    holes.push(c);
+    const [x, y] = xy(cols, c), r = Math.floor(c / cols), q = c % cols;
+    if (r > 0 && !isHole(c - cols)) holeEdge += `M${x} ${y}H${x + U}`;
+    if (r < rows - 1 && !isHole(c + cols)) holeEdge += `M${x} ${y + U}H${x + U}`;
+    if (q > 0 && !isHole(c - 1)) holeEdge += `M${x} ${y}V${y + U}`;
+    if (q < cols - 1 && !isHole(c + 1)) holeEdge += `M${x + U} ${y}V${y + U}`;
+  }
   const starts = new Set<number>();
   sol.paths.forEach((path, w) => { if (!state.found.includes(w) && (p.showStarts || state.starts.includes(w))) starts.add(path[0]); });
   const selSet = new Set(sel);
   return (
-    <div className="wind">
+    <div className={`wind wind-board${wrong ? ' is-wrong' : ''}`}>
       {!preview && <p className="wind-theme">{p.showTheme || done ? p.theme : 'Theme hidden'}</p>}
       <Frame rows={rows} cols={cols} preview={preview} label={`Wind board, ${rows} by ${cols} letters`} ref={ref}
         onPointerDown={down} onPointerMove={moveTo} onPointerUp={up} onPointerCancel={up}
         onKeyDown={(e) => { if (e.key === 'Enter' && sel.length >= 2) submit(sel); if (e.key === 'Escape') update([]); }}>
         <Tiles rows={rows} cols={cols} />
-        {state.found.map((w) => <path key={w} className={`word-line w${w % 4}`} d={line(sol.paths[w])} />)}
+        {holes.map((c) => { const [x, y] = xy(cols, c); return <rect key={c} className="hole" x={x} y={y} width={U} height={U} />; })}
+        {holeEdge && <path className="hole-edge" d={holeEdge} />}
+        {state.found.map((w) => <path key={w} className={`word-line w${w % 6}`} d={line(sol.paths[w])} pathLength={1} />)}
         {sel.length > 0 && <path className="sel-line" d={sel.length === 1 ? `${line(sel)} l0.01 0` : line(sel)} />}
         {[...starts].map((c) => { const [x, y] = mid(cols, c); return <circle key={c} className="word-start" cx={x - 30} cy={y - 30} r={7} />; })}
         {p.letters.map((ch, i) => {
           const [x, y] = mid(cols, i);
+          if (!ch) return null;
           return <text key={i} className={`letter${owner.has(i) ? ' is-found' : selSet.has(i) ? ' is-sel' : ''}`} x={x} y={y + 15}>{ch}</text>;
         })}
         <HintMarks hint={hint} cols={cols} />
@@ -89,9 +113,9 @@ function Board({ puzzle: p, solution: sol, state, set, done, hint, preview }: Bo
         <>
           <p className={`wind-note${note?.bad ? ' is-bad' : ''}`} role="status">{note?.text ?? (sel.length ? sel.map((c) => p.letters[c]).join('') : ' ')}</p>
           <ul className="wind-words" aria-label="Words to find">
-            {sol.words.map((w, i) => {
+            {sol.words.map((w, i) => [w, i] as const).sort((a, b) => a[0].length - b[0].length || a[1] - b[1]).map(([w, i]) => {
               const got = state.found.includes(i);
-              return <li key={i} className={got ? `is-found w${i % 4}` : ''} aria-label={got ? w : `${w.length} letters`}>{[...w].map((ch, j) => <span key={j}>{got ? ch : ''}</span>)}</li>;
+              return <li key={i} className={got ? `is-found w${i % 6}` : ''} aria-label={got ? w : `${w.length} letters`}>{[...w].map((ch, j) => <span key={j}>{got ? ch : ''}</span>)}</li>;
             })}
           </ul>
         </>

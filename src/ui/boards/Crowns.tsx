@@ -1,7 +1,7 @@
 import React, { useRef, type ReactNode } from 'react';
 import type { CrownsPuzzle } from '../../engine/crowns/solve.ts';
 import { CROWN, nextStep, reach, stateFrom } from '../../engine/crowns/logic.ts';
-import { buzz, cellAt, cellInside, Frame, gridPoint, samples, FocusRing, HintMarks, mid, U, useGridFocus, xy, type BoardProps, type GameUI, type Hint } from './common.tsx';
+import { buzz, cellAt, cellInside, Frame, gridPoint, samples, FocusRing, HintMarks, mid, U, useGridFocus, waveDelay, xy, type BoardProps, type GameUI, type Hint } from './common.tsx';
 
 /** 0 empty, 1 crossed out, 2 crown */
 type S = number[];
@@ -66,27 +66,28 @@ function Board({ puzzle: p, state, set, done, hint, preview, settings }: BoardPr
     else if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); cycle(focus); }
   };
 
-  const cells: ReactNode[] = [], thin: ReactNode[] = [], thick: ReactNode[] = [], marks: ReactNode[] = [];
+  const cells: ReactNode[] = [], marks: ReactNode[] = [];
+  let thin = '', thick = '';
   for (let i = 0; i < N * N; i++) {
     const [x, y] = xy(N, i), r = Math.floor(i / N), c = i % N;
-    cells.push(<rect key={i} x={x} y={y} width={U} height={U} className={`region r${p.regions[i] % 10}`} style={{ '--d': `${(r + c) * 45}ms` } as React.CSSProperties} />);
-    if (c < N - 1) (p.regions[i] !== p.regions[i + 1] ? thick : thin).push(<line key={`v${i}`} x1={x + U} y1={y} x2={x + U} y2={y + U} />);
-    if (r < N - 1) (p.regions[i] !== p.regions[i + N] ? thick : thin).push(<line key={`h${i}`} x1={x} y1={y + U} x2={x + U} y2={y + U} />);
+    cells.push(<rect key={i} x={x} y={y} width={U} height={U} className={`region r${p.regions[i] % 11}`} style={waveDelay(N, i)} />);
+    if (c < N - 1) { const seg = `M${x + U} ${y}V${y + U}`; if (p.regions[i] !== p.regions[i + 1]) thick += seg; else thin += seg; }
+    if (r < N - 1) { const seg = `M${x} ${y + U}H${x + U}`; if (p.regions[i] !== p.regions[i + N]) thick += seg; else thin += seg; }
     const [cx, cy] = mid(N, i);
     if (state[i] === QUEEN) {
-      marks.push(<g key={i} className={`crown${bad.has(i) && settings.showErrors ? ' is-bad' : ''}`} transform={`translate(${cx} ${cy + 2})`}><path d={CROWN_PATH} /></g>);
+      marks.push(<g key={`q${i}`} className={`crown${bad.has(i) && settings.showErrors ? ' is-bad' : ''}`} transform={`translate(${cx} ${cy + 2})`}
+        style={{ '--d': `${r * 70}ms` } as React.CSSProperties}><path d={CROWN_PATH} /></g>);
     } else if (state[i] === CROSS || auto.has(i)) {
-      marks.push(<path key={i} className={`cross${state[i] === CROSS ? '' : ' is-auto'}`} d={`M${cx - 13} ${cy - 13} L${cx + 13} ${cy + 13} M${cx + 13} ${cy - 13} L${cx - 13} ${cy + 13}`} />);
+      marks.push(<path key={`x${i}${state[i]}`} className={`cross${state[i] === CROSS ? '' : ' is-auto'}`} d={`M${cx - 13} ${cy - 13} L${cx + 13} ${cy + 13} M${cx + 13} ${cy - 13} L${cx - 13} ${cy + 13}`} />);
     }
   }
   return (
     <Frame rows={N} cols={N} preview={preview} label={`Crowns board, ${N} by ${N}`} ref={ref}
+      className={`board${preview ? ' is-preview' : ''}${done && !preview ? ' is-won' : ''}`}
       onPointerDown={down} onPointerMove={moveTo} onPointerUp={up} onPointerCancel={up} onKeyDown={key}>
-      <clipPath id={`clip${N}`}><rect width={N * U} height={N * U} rx={22} /></clipPath>
-      <g clipPath={`url(#clip${N})`}>{cells}</g>
-      <g className="grid-thin">{thin}</g>
-      <g className="grid-thick">{thick}</g>
-      <rect className="grid-edge" width={N * U} height={N * U} rx={22} />
+      {cells}
+      <path className="grid-thin" d={thin} />
+      <path className="grid-thick" d={thick} />
       {marks}
       <HintMarks hint={hint} cols={N} />
       {!preview && !done && <FocusRing cols={N} cell={focus} />}
