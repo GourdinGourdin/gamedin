@@ -34,3 +34,15 @@ npm run bench      # generation speed and difficulty mix, e.g. `npm run bench cr
 Word list for Wind: SCOWL (Kevin Atkinson, permissive SCOWL licence), common levels only. Typeface: Schibsted Grotesk (SIL Open Font Licence).
 
 See `PLAN.md` for the product plan and design direction.
+
+## Advert
+
+`video/` builds the 32-second vertical advert (1080×1920) from the app's real boards.
+
+```bash
+npm run dev -- --port 5183          # in one terminal
+cd video && npm install
+node gen-voice.mjs                  # voice-over: Kokoro-82M (Apache-2.0), runs locally
+node gen-music.mjs                  # music: synthesised in plain JS, no samples
+node render.mjs && node mix.mjs     # out/gamedin.mp4
+```

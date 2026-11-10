@@ -1,0 +1,49 @@
+/* Advert layout: a 540 x 960 stage, captured at 2x for 1080 x 1920. */
+html, body { margin: 0; background: #000; }
+*, *::before, *::after { animation: none !important; transition: none !important; }
+.frame { position: relative; width: 540px; height: 960px; overflow: hidden; font-family: var(--font); }
+.sc { position: absolute; inset: 0; }
+.sc > * { position: absolute; margin: 0; }
+.sc-paper { background: var(--bg); color: var(--ink); }
+.sc-ink { background: var(--ink); color: var(--bg); }
+.sc-game { background: var(--accent); color: #fff; }
+.wipe { position: absolute; inset: 0; background: var(--bg); pointer-events: none; }
+.hot { color: var(--trace); display: inline-block; }
+
+.big { left: 44px; right: 30px; font-size: 68px; line-height: .98; letter-spacing: -.04em; font-weight: 800; }
+.mid { left: 0; right: 0; text-align: center; font-size: 40px; letter-spacing: -.03em; font-weight: 800; line-height: 1.1; }
+.huge { left: 44px; font-size: 68px; letter-spacing: -.04em; font-weight: 800; line-height: 1; }
+.huge.c-trace { color: var(--bg); } .huge.c-sym { color: #F0A31E; } .huge.c-plots { color: #F0703F; }
+.card { background: var(--bg); border-radius: 36px; padding: 18px; box-shadow: 0 18px 50px rgba(0, 0, 0, .22); box-sizing: border-box; }
+.sc-paper .card { background: var(--surface); box-shadow: 0 0 0 1.5px var(--line), 0 18px 44px rgba(21, 23, 28, .12); }
+.card .board { display: block; }
+.frame .wind { width: 100%; min-width: 0; }
+
+.pill { left: 50%; translate: -50% 0; white-space: nowrap; padding: 12px 22px; border-radius: 999px; background: var(--cell); font-weight: 700; font-size: 22px; font-variant-numeric: tabular-nums; }
+.pill.is-struck { color: var(--bad); background: var(--bad-soft); text-decoration: line-through; text-decoration-thickness: 3px; }
+.pill.is-ink { background: var(--ink); color: var(--bg); font-size: 26px; padding: 12px 26px; }
+
+.lockup { left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 18px; font-weight: 800; font-size: 66px; letter-spacing: -.04em; }
+.lockup.is-big { flex-direction: column; font-size: 84px; gap: 22px; }
+.five { left: 0; width: 540px; height: 320px; }
+.mini { position: absolute; width: 140px; }
+.row { left: 30px; right: 30px; display: flex; gap: 10px; }
+.tiny { flex: 1; }
+.fine { left: 0; right: 0; text-align: center; font-size: 21px; color: var(--ink-2); font-weight: 500; }
+.fine.is-small { font-size: 15px; color: var(--muted); }
+
+.count { top: 70px; right: 44px; font-weight: 700; font-size: 22px; opacity: .8; font-variant-numeric: tabular-nums; }
+.name { top: 96px; left: 44px; font-size: 104px; line-height: 1; letter-spacing: -.05em; font-weight: 800; }
+.tag { top: 214px; left: 46px; font-size: 26px; font-weight: 600; opacity: .92; }
+.solved { top: 772px; left: 50%; translate: -50% 0; white-space: nowrap; background: var(--ink); color: #fff; padding: 12px 24px; border-radius: 999px; font-size: 24px; font-weight: 600; }
+.solved b { font-weight: 800; margin-left: 8px; font-variant-numeric: tabular-nums; }
+
+.hintcard { left: 44px; right: 44px; background: var(--surface); font-size: 20px; box-shadow: 0 0 0 1.5px var(--line), 0 14px 34px rgba(21, 23, 28, .1); }
+.hintcard { padding: 20px; gap: 16px; }
+.hintcard p { font-size: 24px; line-height: 1.3; font-weight: 500; }
+.hintcard .btn { min-height: 52px; font-size: 21px; padding: 0 20px; }
+.hintcard .is-pressed { transform: scale(.94); background: var(--pairs); }
+
+.cap { position: absolute; left: 50%; bottom: 96px; translate: -50% 0; margin: 0; white-space: nowrap; background: var(--ink); color: rgba(255, 255, 255, .55); padding: 10px 20px; border-radius: 16px; font-size: 28px; font-weight: 750; letter-spacing: -.01em; }
+.cap .is-said { color: #fff; }
+.cap.is-light { background: var(--bg); color: rgba(21, 23, 28, .45); } .cap.is-light .is-said { color: var(--ink); }
