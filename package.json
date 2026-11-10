@@ -1,0 +1,30 @@
+{
+  "name": "gamedin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GamedIn: unlimited logic puzzles, generated on your device.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build && node scripts/sw.mjs",
+    "preview": "vite preview",
+    "typecheck": "tsc",
+    "test": "node --test test/*.test.ts",
+    "bench": "node scripts/bench.ts",
+    "e2e": "node scripts/e2e.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "playwright-core": "^1.65.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.7"
+  },
+  "dependencies": {
+    "@fontsource-variable/schibsted-grotesk": "^5.3.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  }
+}
