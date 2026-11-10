@@ -106,12 +106,13 @@ export function nextStep(st: CrownsState): Step | null {
           text: `A crown here would rule out every open cell of ${name(u)}. Cross it out.` };
       }
     }
-    if (best?.level === 2) return best;
+    if ((best as Step | null)?.level === 2) return best;
   }
 
   // 4. k regions packed into k lines (and k lines packed into k regions)
   for (let k = 2; k < N; k++) {
-    if (best && k >= 2) { if (best.level <= (k === 2 ? 3 : 4)) return best; }
+    const sofar = best as Step | null;
+    if (sofar && sofar.level <= (k === 2 ? 3 : 4)) return sofar;
     for (const [axis, f] of [['rows', rowOf], ['columns', colOf]] as const) {
       const lineUnits = live.filter((x) => x.u.kind === (axis === 'rows' ? 'row' : 'column'));
       for (let a = 0; a + k <= N; a++) {
