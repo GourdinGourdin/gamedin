@@ -83,7 +83,7 @@ function Board({ puzzle: p, state, set, done, hint, preview, settings }: BoardPr
   }
   return (
     <Frame rows={N} cols={N} preview={preview} label={`Crowns board, ${N} by ${N}`} ref={ref}
-      className={`board${preview ? ' is-preview' : ''}${done && !preview ? ' is-won' : ''}`}
+      className={`board crowns-board${preview ? ' is-preview' : ''}${done && !preview ? ' is-won' : ''}`}
       onPointerDown={down} onPointerMove={moveTo} onPointerUp={up} onPointerCancel={up} onKeyDown={key}>
       {cells}
       <path className="grid-thin" d={thin} />

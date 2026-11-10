@@ -53,9 +53,12 @@ function Board({ puzzle: p, state, set, done, hint, preview, settings }: BoardPr
       {p.edges.map(([a, b, t], i) => {
         const [ax, ay] = mid(N, a), [bx, by] = mid(N, b), x = (ax + bx) / 2, y = (ay + by) / 2;
         return (
-          <g key={i} className={`link${err.edges.has(i) ? ' is-bad' : ''}`} transform={`translate(${x} ${y})`}>
-            <circle r={15} />
-            {t === '=' ? <path d="M-7 -4 H7 M-7 4 H7" /> : <path d="M-6 -6 L6 6 M6 -6 L-6 6" />}
+          // position on the outer group, animation on the inner one, so a shake never moves it off its spot
+          <g key={i} transform={`translate(${x} ${y})`}>
+            <g className={`link${err.edges.has(i) ? ' is-bad' : ''}`}>
+              <circle r={15} />
+              {t === '=' ? <path d="M-7 -4 H7 M-7 4 H7" /> : <path d="M-6 -6 L6 6 M6 -6 L-6 6" />}
+            </g>
           </g>
         );
       })}

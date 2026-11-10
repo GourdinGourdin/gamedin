@@ -102,7 +102,9 @@ export function Play({ game, size, difficulty, seed, daily }: Props) {
     if (!g) return;
     if (hint?.apply) { const next = hint.apply(state); setHint(null); setHistory((h) => [...h, next]); finish(next); return; }
     const h = ui.hint(g.puzzle, state, g.solution);
-    if (h) { setHint(h); setHints((n) => n + 1); }
+    if (!h) return;
+    if (h.now) { const next = h.now(state); if (next !== state) setHistory((hs) => [...hs, next]); }
+    setHint(h); setHints((n) => n + 1);
   };
   const next = (s = size, d = difficulty) => go(`/play/${game}/${s}/${d}/${takeSeed(game, s, d)}`);
   const share = async () => {

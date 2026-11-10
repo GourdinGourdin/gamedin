@@ -7,7 +7,7 @@ import { solveAllCrowns, type CrownsPuzzle } from './solve.ts';
 
 export interface CrownsGame { puzzle: CrownsPuzzle; /** crown column per row */ solution: number[]; grade: Grade }
 
-function randomCrowns(N: number, r: Rng): number[] | null {
+export function randomCrowns(N: number, r: Rng): number[] | null {
   const cols: number[] = [], used = new Uint8Array(N);
   const go = (row: number): boolean => {
     if (row === N) return true;
@@ -36,7 +36,7 @@ function neighbours(N: number, i: number): number[] {
 // wraps around the others, one medium, the rest small, and a one-cell region
 // on about one board in four. Borders are irregular (about 0.72 border edges
 // per cell): blocks, bars along a row or column and winding strips mixed.
-const PROFILE = [0.36, 0.17, 0.12, 0.1, 0.08, 0.07, 0.055, 0.04];
+const PROFILE = [0.33, 0.17, 0.12, 0.1, 0.085, 0.07, 0.055, 0.04];
 
 function targets(N: number, r: Rng): number[] {
   const t: number[] = [];
@@ -51,10 +51,10 @@ function targets(N: number, r: Rng): number[] {
 
 type Style = 'block' | 'bar' | 'wind' | 'free';
 
-function growRegions(N: number, cols: number[], r: Rng): number[] {
+export function growRegions(N: number, cols: number[], r: Rng, wantOne = false): number[] {
   const reg = new Array<number>(N * N).fill(-1), size = new Array<number>(N).fill(1);
   const goal = shuffle(r, targets(N, r));
-  if (r() < 0.25) goal[goal.indexOf(Math.min(...goal))] = 1;
+  if (wantOne) goal[goal.indexOf(Math.min(...goal))] = 1;
   const style: Style[] = goal.map((g) => {
     if (g <= 1) return 'free';
     const x = r();
@@ -77,7 +77,7 @@ function growRegions(N: number, cols: number[], r: Rng): number[] {
       const n = inside(i, k);
       let w = 1;
       if (style[k] === 'block') w = n >= 2 ? 6 : 1;
-      else if (style[k] === 'wind') w = n >= 2 ? 0.25 : 1;
+      else if (style[k] === 'wind') w = n >= 2 ? 0.12 : 1;
       else if (style[k] === 'bar') {
         const along = neighbours(N, i).some((j) => reg[j] === k && (Math.abs(i - j) === 1 ? 1 : 2) === axis[k]);
         w = along ? 6 : 0.3;
@@ -107,58 +107,93 @@ function staysConnected(N: number, reg: number[], k: number, cell: number): bool
 }
 
 /** One board with a unique solution, or null if this attempt did not converge. */
-export function buildCrowns(N: number, r: Rng): { puzzle: CrownsPuzzle; solution: number[] } | null {
+export function buildCrowns(N: number, r: Rng, wantOne = false): { puzzle: CrownsPuzzle; solution: number[] } | null {
   const cols = randomCrowns(N, r);
   if (!cols) return null;
-  const reg = growRegions(N, cols, r);
-  for (let step = 0; step < 60 * N; step++) {
+  const reg = growRegions(N, cols, r, wantOne);
+  // cheap early rejection: skip the repair loop for a grown board that already
+  // has too many tiny regions or too smooth a border
+  const sz0 = new Array<number>(N).fill(0);
+  for (const k of reg) sz0[k]++;
+  if (sz0.filter((x) => x <= 3).length > 3 || sz0.filter((x) => x === 1).length > (wantOne ? 1 : 0)) return null;
+  let b0 = 0;
+  for (let i = 0; i < N * N; i++) {
+    if (i % N < N - 1 && reg[i] !== reg[i + 1]) b0++;
+    if (i < N * N - N && reg[i] !== reg[i + N]) b0++;
+  }
+  if (b0 / (N * N) < 0.62) return null;
+  for (let step = 0; step < 32 * N; step++) {
     const sols = solveAllCrowns({ size: N, regions: reg }, 2);
-    const alt = sols.find((s) => s.some((c, row) => c !== cols[row]));
-    if (!alt) return sols.length === 1 ? { puzzle: { size: N, regions: reg }, solution: cols } : null;
-    // Break the other solution: hand one of its crown cells to a neighbouring
-    // region, which then holds two of its crowns.
-    const moves: [number, number][] = [];
-    for (let row = 0; row < N; row++) {
-      if (alt[row] === cols[row]) continue;
-      const cell = row * N + alt[row], k = reg[cell];
-      if (!staysConnected(N, reg, k, cell)) continue;
-      for (const j of neighbours(N, cell)) if (reg[j] !== k) moves.push([cell, reg[j]]);
+    const alts = sols.filter((s) => s.some((c, row) => c !== cols[row]));
+    if (!alts.length) return sols.length === 1 ? { puzzle: { size: N, regions: reg }, solution: cols } : null;
+    const count = new Array<number>(N).fill(0);
+    for (const k of reg) count[k]++;
+    // Break each other solution: hand one of its crown cells to a neighbouring
+    // region, which then holds two of its crowns. Prefer moves that leave the
+    // donor at 4 cells or more so repairs do not pile up tiny regions.
+    let broke = false;
+    for (const alt of alts.slice(0, 1)) {
+      const moves: [number, number][] = [], roomy: [number, number][] = [];
+      for (let row = 0; row < N; row++) {
+        if (alt[row] === cols[row]) continue;
+        const cell = row * N + alt[row], k = reg[cell];
+        if (!staysConnected(N, reg, k, cell)) continue;
+        for (const j of neighbours(N, cell)) if (reg[j] !== k) (count[k] > 3 ? roomy : moves).push([cell, reg[j]]);
+      }
+      const pool = roomy.length ? roomy : moves;
+      if (!pool.length) continue;
+      const [cell, k] = pool[randInt(r, pool.length)];
+      count[reg[cell]]--; count[k]++;
+      reg[cell] = k;
+      broke = true;
     }
-    if (!moves.length) return null;
-    const [cell, k] = moves[randInt(r, moves.length)];
-    reg[cell] = k;
+    if (broke) continue;
+    // every differing crown cell is a bridge or a lone cell: loosen things up
+    // by moving a random border cell, then try again
+    const loose: [number, number][] = [];
+    for (let i = 0; i < N * N; i++) {
+      if (i % N === cols[Math.floor(i / N)] || count[reg[i]] <= 3 || !staysConnected(N, reg, reg[i], i)) continue;
+      for (const j of neighbours(N, i)) if (reg[j] !== reg[i]) loose.push([i, reg[j]]);
+    }
+    if (!loose.length) return null;
+    const [c2, k2] = loose[randInt(r, loose.length)];
+    reg[c2] = k2;
   }
   return null;
 }
 
 /** Shape check against the past boards: few tiny regions, irregular borders. */
-function looksGood(p: CrownsPuzzle, r: Rng, loose: boolean): boolean {
+function looksGood(p: CrownsPuzzle, wantOne: boolean, loose: boolean): boolean {
   const N = p.size, R = p.regions, size = new Array<number>(N).fill(0);
   for (const k of R) size[k]++;
   const ones = size.filter((s) => s === 1).length, small = size.filter((s) => s <= 3).length;
-  if (ones > 1 || (ones === 1 && !loose && r() < 0.5) || small > (N >= 8 && !loose ? 2 : 3)) return false;
+  if (ones !== (wantOne ? 1 : 0) && !loose) return false;
+  if (ones > 1 || small > (N >= 8 && !loose ? 2 : 3)) return false;
   let border = 0;
   for (let i = 0; i < N * N; i++) {
     if (i % N < N - 1 && R[i] !== R[i + 1]) border++;
     if (i < N * N - N && R[i] !== R[i + N]) border++;
   }
-  return border / (N * N) >= (loose ? 0.56 : 0.62);
+  return border / (N * N) >= (loose ? 0.58 : 0.65);
 }
 
+const ONE_CHANCE = 0.28;
 export const CROWNS_SIZES = [7, 8, 9, 10, 11];
 const ORDER: Difficulty[] = ['easy', 'medium', 'hard'];
 
 export function generateCrowns(size: number, difficulty: Difficulty, seed: string): CrownsGame {
   const r = makeRng(`crowns/${size}/${difficulty}/${seed}`);
+  // one board in four has a one-cell region, as in the daily archive
+  const wantOne = r() < ONE_CHANCE, patience = size >= 11 ? 20 : size >= 10 ? 28 : 45;
   let best: CrownsGame | null = null, bestGap = 9;
   for (let attempt = 0; attempt < 400; attempt++) {
-    const b = buildCrowns(size, r);
-    if (!b || !looksGood(b.puzzle, r, attempt > 120)) continue;
+    const b = buildCrowns(size, r, wantOne);
+    if (!b || !looksGood(b.puzzle, wantOne, attempt > 2 * patience)) continue;
     const grade = gradeCrowns(b.puzzle);
     if (!grade.solved) continue;
     const gap = Math.abs(ORDER.indexOf(grade.difficulty) - ORDER.indexOf(difficulty));
     if (gap < bestGap) { best = { ...b, grade }; bestGap = gap; }
-    if (gap === 0 || (attempt > 150 && best)) break;
+    if (gap === 0 || (attempt > patience && best)) break;
   }
   if (!best) throw new Error('crowns: no puzzle found');
   return best;

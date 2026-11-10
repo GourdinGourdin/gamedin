@@ -17,6 +17,8 @@ export interface Hint {
   apply?: (state: any) => any;
   /** a route to draw as a moving arrow, cell by cell */
   arrow?: number[];
+  /** applied as soon as the hint is shown (Trace rewinds a wrong line) */
+  now?: (state: any) => any;
 }
 
 export interface BoardProps<P, S, Sol> {

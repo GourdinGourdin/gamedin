@@ -5,34 +5,44 @@
 import { randInt, type Rng } from '../rng.ts';
 
 type Shape = [number, number][];
-const SHAPES: Shape[] = [
-  [[0, 0]],
-  [[0, 0], [1, 0]],
-  [[0, 0], [1, 0], [2, 0]],
-  [[0, 0], [0, 1], [1, 0]],
-  [[0, 0], [0, 1], [0, 2], [1, 0], [2, 0]],
-  [[0, 0], [0, 1], [1, 0], [1, 1]],
-  [[0, 0], [0, 1], [0, 2], [1, 1], [2, 1]],
-  [[0, 0], [0, 1], [0, 2], [1, 1]],
-  [[0, 0], [0, 1], [1, 1]],
-];
+const SINGLE: Shape = [[0, 0]];
+const DOMINO: Shape = [[0, 0], [1, 0]];
+const BAR3: Shape = [[0, 0], [1, 0], [2, 0]];
+const BAR4: Shape = [[0, 0], [1, 0], [2, 0], [3, 0]];
+const L3: Shape = [[0, 0], [0, 1], [1, 0]];
+const L2: Shape = [[0, 0], [0, 1], [1, 1]];
+const CORNER: Shape = [[0, 0], [0, 1], [0, 2], [1, 0], [2, 0]];
+const BLOCK: Shape = [[0, 0], [0, 1], [1, 0], [1, 1]];
+const T: Shape = [[0, 0], [0, 1], [0, 2], [1, 1], [2, 1]];
+const TSHORT: Shape = [[0, 0], [0, 1], [0, 2], [1, 1]];
+const PLUS: Shape = [[0, 1], [1, 0], [1, 1], [1, 2], [2, 1]];
+
+/** Shape weights per board size: small shapes on small boards, big ones on big boards. */
+const SHAPES: Record<number, [Shape, number][]> = {
+  5: [[SINGLE, 5], [DOMINO, 4], [BAR3, 4], [L3, 3], [L2, 1], [BLOCK, 1], [TSHORT, 1], [CORNER, 1]],
+  6: [[SINGLE, 2], [DOMINO, 3], [BAR3, 3], [L3, 3], [BLOCK, 2], [TSHORT, 3], [T, 4], [CORNER, 3], [PLUS, 1]],
+  7: [[DOMINO, 1], [BAR3, 3], [BAR4, 1], [L3, 3], [BLOCK, 2], [TSHORT, 2], [T, 4], [CORNER, 7], [PLUS, 2], [SINGLE, 1]],
+};
 
 type Sym = (r: number, c: number, N: number) => [number, number][];
-const SYMS: [Sym, number][] = [
-  [(r, c, N) => [[r, c], [N - 1 - r, N - 1 - c]], 5],
-  [(r, c, N) => [[r, c], [r, N - 1 - c]], 2],
-  [(r, c, N) => [[r, c], [N - 1 - r, c]], 1],
-  [(r, c, N) => [[r, c], [c, N - 1 - r], [N - 1 - r, N - 1 - c], [N - 1 - c, r]], 3],
-];
+const HALF: Sym = (r, c, N) => [[r, c], [N - 1 - r, N - 1 - c]];
+const MIRROR: Sym = (r, c, N) => [[r, c], [r, N - 1 - c]];
+const FLIP: Sym = (r, c, N) => [[r, c], [N - 1 - r, c]];
+const QUARTER: Sym = (r, c, N) => [[r, c], [c, N - 1 - r], [N - 1 - r, N - 1 - c], [N - 1 - c, r]];
+const SYMS: Record<number, [Sym, number][]> = {
+  5: [[HALF, 6], [MIRROR, 3], [FLIP, 1], [QUARTER, 2]],
+  6: [[HALF, 6], [MIRROR, 2], [FLIP, 1], [QUARTER, 3]],
+  7: [[HALF, 5], [MIRROR, 3], [FLIP, 1], [QUARTER, 2]],
+};
+
+function pick<T>(r: Rng, list: [T, number][]): T {
+  let x = r() * list.reduce((a, s) => a + s[1], 0);
+  for (const [s, w] of list) { x -= w; if (x <= 0) return s; }
+  return list[0][0];
+}
 
 /** Number of blocked tiles allowed for each board size, from past boards. */
-export const HOLES: Record<number, [number, number]> = { 5: [2, 8], 6: [7, 14], 7: [14, 22] };
-
-function pickSym(r: Rng): Sym {
-  let x = r() * SYMS.reduce((a, s) => a + s[1], 0);
-  for (const [s, w] of SYMS) { x -= w; if (x <= 0) return s; }
-  return SYMS[0][0];
-}
+export const HOLES: Record<number, [number, number]> = { 5: [2, 8], 6: [7, 14], 7: [10, 22] };
 
 /** Open tiles still form one piece, and no more than two have a single way in or out. */
 function playable(N: number, hole: Uint8Array): boolean {
@@ -50,28 +60,62 @@ function playable(N: number, hole: Uint8Array): boolean {
   if (deadEnds > 2) return false;
   const seen = new Set([open[0]]), stack = [open[0]];
   while (stack.length) for (const j of nb(stack.pop()!)) if (!seen.has(j)) { seen.add(j); stack.push(j); }
-  return seen.size === open.length;
+  if (seen.size !== open.length) return false;
+  return !hasCorridor(N, hole) && !hasBlockedLine(N, hole);
+}
+
+/** True if a whole row or column is blocked, which would cut the board in two or leave a slab. */
+function hasBlockedLine(N: number, hole: Uint8Array): boolean {
+  for (let a = 0; a < N; a++) {
+    let row = true, col = true;
+    for (let b = 0; b < N; b++) { if (!hole[a * N + b]) row = false; if (!hole[b * N + a]) col = false; }
+    if (row || col) return true;
+  }
+  return false;
+}
+
+/** True if three or more open tiles in a row are squeezed between blocked tiles on both sides. */
+function hasCorridor(N: number, hole: Uint8Array): boolean {
+  const wall = (r: number, c: number) => r >= 0 && c >= 0 && r < N && c < N && hole[r * N + c] === 1;
+  for (let dir = 0; dir < 2; dir++) {
+    for (let a = 0; a < N; a++) {
+      let run = 0;
+      for (let b = 0; b < N; b++) {
+        const r = dir ? a : b, c = dir ? b : a;
+        const pinched = !hole[r * N + c] && (dir ? wall(r - 1, c) && wall(r + 1, c) : wall(r, c - 1) && wall(r, c + 1));
+        run = pinched ? run + 1 : 0;
+        if (run >= 3) return true;
+      }
+    }
+  }
+  return false;
 }
 
 /** A symmetric pattern of blocked tiles, or an empty one when `none`. */
 export function holePattern(N: number, r: Rng, none = false): Uint8Array {
   const [lo, hi] = HOLES[N] ?? [0, 0];
   for (let attempt = 0; attempt < 200 && !none && hi > 0; attempt++) {
-    const hole = new Uint8Array(N * N), sym = pickSym(r);
-    const pieces = 1 + (r() < 0.35 ? 1 : 0);
+    const hole = new Uint8Array(N * N), sym = pick(r, SYMS[N] ?? SYMS[5]);
+    const four = sym === QUARTER;
+    const pieces = four || N === 5 ? 1 + (r() < 0.25 ? 1 : 0) : 1 + (r() < 0.3 ? 1 : 0);
     for (let p = 0; p < pieces; p++) {
-      const shape = SHAPES[randInt(r, SHAPES.length)];
+      const shape = pick(r, SHAPES[N] ?? SHAPES[5]);
       const turn = randInt(r, 4);
       const cells = shape.map(([a, b]) => (turn === 0 ? [a, b] : turn === 1 ? [b, -a] : turn === 2 ? [-a, -b] : [-b, a]));
       const minR = Math.min(...cells.map((x) => x[0])), minC = Math.min(...cells.map((x) => x[1]));
       const h = Math.max(...cells.map((x) => x[0])) - minR + 1, w = Math.max(...cells.map((x) => x[1])) - minC + 1;
-      // anchor: a corner, an edge, or one step in from the edge
-      const at = r();
-      const row0 = at < 0.45 ? 0 : at < 0.75 ? randInt(r, Math.max(1, N - h + 1)) : 1;
-      const col0 = at < 0.45 ? 0 : at < 0.75 ? (r() < 0.5 ? 0 : 1) : randInt(r, Math.max(1, N - w + 1));
+      // anchor: a corner, along an edge, or one step in from the edge
+      const at = r(), flip = r() < 0.5;
+      let row0: number, col0: number;
+      if (at < 0.4) { row0 = 0; col0 = 0; }
+      else if (at < 0.65) { row0 = 0; col0 = randInt(r, Math.max(1, N - w + 1)); }
+      else if (at < 0.85) { row0 = 1; col0 = randInt(r, Math.max(1, N - w)); }
+      else { row0 = 1; col0 = 1; }
+      if (flip) [row0, col0] = [col0, row0];
+      // the shape's own size decides how far "one in" can go
+      row0 = Math.min(row0, N - h); col0 = Math.min(col0, N - w);
       for (const [a, b] of cells) {
         const rr = a - minR + row0, cc = b - minC + col0;
-        if (rr < 0 || cc < 0 || rr >= N || cc >= N) continue;
         for (const [x, y] of sym(rr, cc, N)) hole[x * N + y] = 1;
       }
     }

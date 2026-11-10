@@ -62,12 +62,30 @@ function Board({ puzzle: p, state, set, done, hint, preview }: BoardProps<PlotsP
   const { focus, setFocus, move } = useGridFocus(rows, cols);
   const [anchor, setAnchor] = useState<number | null>(null);
 
-  const commit = (rect: Rect, base: Rect | null = null) => set([...state.filter((r) => r !== base && !overlap(r, rect)), rect]);
+  // the last block drawn or reshaped: tapping an empty cell grows it to reach there
+  const last = useRef<Rect | null>(null);
+  /** Does `rect` run over any block other than `base`? Blocks are never drawn over. */
+  const blocked = (rect: Rect, base: Rect | null = null) => state.some((r) => r !== base && overlap(r, rect));
+  const commit = (rect: Rect, base: Rect | null = null) => {
+    if (blocked(rect, base)) return false;
+    set([...state.filter((r) => r !== base), rect]);
+    last.current = rect;
+    return true;
+  };
   const at = (cell: number) => state.find((k) => holds(k, Math.floor(cell / cols), cell % cols)) ?? null;
   const removeAt = (cell: number) => {
     const hit = at(cell);
     if (hit) set(state.filter((k) => k !== hit));
     return !!hit;
+  };
+  /** Grow the last block to take in `cell` (its bounding box), if nothing is in the way. */
+  const completeTo = (cell: number) => {
+    const k = last.current && state.find((r) => same(r, last.current!));
+    if (!k) return false;
+    const r = Math.floor(cell / cols), c = cell % cols;
+    const t = Math.min(k[0], r), l = Math.min(k[1], c);
+    const grown: Rect = [t, l, Math.max(k[0] + k[2] - 1, r) - t + 1, Math.max(k[1] + k[3] - 1, c) - l + 1];
+    return commit(grown, k);
   };
   const down = (e: React.PointerEvent) => {
     if (done || e.button > 0) return;
@@ -91,10 +109,15 @@ function Board({ puzzle: p, state, set, done, hint, preview }: BoardProps<PlotsP
     const drag = dragRef.current;
     if (!drag) return;
     setDrag(null);
-    if (drag.a === drag.b) { removeAt(drag.a); return; } // a tap removes the rectangle under it
+    if (drag.a === drag.b) {
+      // a tap on a block removes it; a tap on an empty cell completes the last block up to there
+      if (drag.base) removeAt(drag.a);
+      else if (completeTo(drag.a)) buzz(10);
+      return;
+    }
     const rect = liveOf(drag);
     if (drag.base && same(rect, drag.base)) return;
-    commit(rect, drag.base);
+    if (!commit(rect, drag.base)) { buzz(30); return; }
     buzz(clueOf(p, rect) === -1 ? 4 : 12);
   };
   const key = (e: React.KeyboardEvent) => {
@@ -111,6 +134,7 @@ function Board({ puzzle: p, state, set, done, hint, preview }: BoardProps<PlotsP
   const live = drag && drag.a !== drag.b ? liveOf(drag)
     : anchor !== null && anchor !== focus ? span(cols, anchor, focus) : null;
   const liveClue = live ? clueOf(p, live) : -1;
+  const liveBlocked = !!live && blocked(live, drag && drag.a !== drag.b ? drag.base : null);
   const hidden = drag && drag.a !== drag.b ? drag.base : null;
   const box = ([t, l, h, w]: Rect, inset: number, rx = 12) => ({ x: l * U + inset, y: t * U + inset, width: w * U - inset * 2, height: h * U - inset * 2, rx });
   const owner = new Map<number, number>();
@@ -126,18 +150,18 @@ function Board({ puzzle: p, state, set, done, hint, preview }: BoardProps<PlotsP
         const k = clueOf(p, rect);
         return <rect key={rect.join()} className={k === -1 ? 'plot is-bad' : `plot p${k % 11}`} style={waveDelay(cols, rect[0] * cols + rect[1])} {...box(rect, 3, 0)} />;
       })}
-      {live && <rect className={`plot-live${liveClue !== -1 ? ` is-fit p${liveClue % 11}` : ''}`} {...box(live, 3)} />}
+      {live && <rect className={`plot-live${liveBlocked ? ' is-blocked' : liveClue !== -1 ? ` is-fit p${liveClue % 11}` : ''}`} {...box(live, 3)} />}
       {/* once solved, the clues fade away and only the coloured blocks stay */}
       {p.clues.map((c, i) => {
         const [x, y] = mid(cols, c.cell), [w, h] = GLYPH[c.shape];
         return (
           <g key={i} className={`clue p${i % 11}${owner.has(i) ? '' : ' is-open'}${c.shape === 'any' ? ' is-any' : ''}`}>
             <rect className="badge" x={x - w / 2} y={y - h / 2} width={w} height={h} rx={10} />
-            {c.size > 0 && <text x={x} y={y + 10}>{c.size}</text>}
+            {(c.size > 0 || c.shape === 'any') && <text x={x} y={y + 10}>{c.size || '?'}</text>}
           </g>
         );
       })}
-      {live && <text className="plot-size" x={(live[1] + live[3] / 2) * U} y={live[0] * U - 12 < 20 ? (live[0] + live[2]) * U + 34 : live[0] * U - 12}>{live[2] * live[3]}</text>}
+      {live && !liveBlocked && <text className="plot-size" x={(live[1] + live[3] / 2) * U} y={live[0] * U - 12 < 20 ? (live[0] + live[2]) * U + 34 : live[0] * U - 12}>{live[2] * live[3]}</text>}
       <HintMarks hint={hint} cols={cols} />
       {!preview && !done && <FocusRing cols={cols} cell={focus} />}
     </Frame>

@@ -53,12 +53,17 @@ export function generatePlots(size: number, difficulty: Difficulty, seed: string
       clues[i] = { ...old, size: 0 };
       if (!gradePlots(puzzle, maxLevel).solved) clues[i] = old;
     }
-    if (difficulty === 'hard') {
-      for (const i of shuffle(r, [...clues.keys()]).slice(0, 2)) {
-        const old = clues[i];
-        clues[i] = { ...old, shape: 'any' };
-        if (!gradePlots(puzzle, maxLevel).solved) clues[i] = old;
-      }
+    // like the daily boards, some clues give only a number and no shape: on
+    // every level, more of them on harder boards; numbered clues go first
+    const anyCount = difficulty === 'easy' ? 1 : difficulty === 'medium' ? 2 : 3;
+    const order = shuffle(r, [...clues.keys()]).sort((a, b) => (clues[b].size ? 1 : 0) - (clues[a].size ? 1 : 0));
+    let made = 0;
+    for (const i of order) {
+      if (made === anyCount) break;
+      const old = clues[i];
+      if (!old.size && made > 0) continue;
+      clues[i] = { ...old, shape: 'any' };
+      if (gradePlots(puzzle, maxLevel).solved) made++; else clues[i] = old;
     }
     const grade = gradePlots(puzzle);
     const gap = Math.abs(ORDER.indexOf(grade.difficulty) - ORDER.indexOf(difficulty));

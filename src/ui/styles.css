@@ -6,9 +6,10 @@
 :root {
   --bg: #F7F0E1; --surface: #FFFBF3; --ink: #231E18; --ink-2: #4E463B; --muted: #7D7465; --line: #E4D9C4;
   --cell: #FFFDF8; --cell-2: #E9E0CD; --grid: rgba(35, 30, 24, .13); --hole: #C9BFAB;
-  --edge: #231E18; --bad: #D23F2E; --bad-soft: #F7D3CA; --gold: #F0B21C; --gold-2: #A86F00; --on-region: #231E18;
+  --w0: #E8572A; --w1: #6B4BDB; --w2: #1C78D4; --w3: #17955C; --w4: #D3336E; --w5: #C98A00; --edge: #231E18; --bad: #D23F2E; --bad-soft: #F7D3CA; --gold: #F0B21C; --gold-2: #A86F00; --on-region: #231E18;
   --trace: #EC6A2E; --crowns: #7650DE; --pairs: #2C6BD3; --plots: #1C8A6B; --wind: #CC3B75; --sym-a: #F2A414;
-  --r0: #F79C62; --r1: #A88BEC; --r2: #6EC0F0; --r3: #93D27C; --r4: #F6CF4A; --r5: #F27B87; --r6: #5ECDBB; --r7: #DA9DEB; --r8: #CBBE9F; --r9: #DCE46C; --r10: #8EA6F2;
+  --v0: #F79C62; --v1: #A88BEC; --v2: #6EC0F0; --v3: #93D27C; --v4: #F6CF4A; --v5: #F27B87; --v6: #5ECDBB; --v7: #DA9DEB; --v8: #CBBE9F; --v9: #DCE46C; --v10: #8EA6F2;
+  --r0: #BBA3E2; --r1: #B3DFA0; --r2: #FFC992; --r3: #96BEFF; --r4: #DFDFDF; --r5: #FF7B60; --r6: #E6F388; --r7: #B9B29E; --r8: #DFA0BF; --r9: #95CBCF; --r10: #FE93F1;
   --shadow: 0 1px 0 rgba(35, 30, 24, .06);
   --font: 'Schibsted Grotesk Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --ease: cubic-bezier(.2, .8, .2, 1);
@@ -19,18 +20,20 @@
 @media (prefers-color-scheme: dark) { :root:not([data-theme='light']) {
   --bg: #17130F; --surface: #221D18; --ink: #F3EBDD; --ink-2: #D0C5B3; --muted: #9A8F7F; --line: #372F27;
   --cell: #2A241E; --cell-2: #3D352C; --grid: rgba(243, 235, 221, .1); --hole: #4A4136;
-  --edge: #8C7F6C; --bad: #FF7A63; --bad-soft: #55291F; --gold: #F7C543; --gold-2: #8A5A00; --on-region: #1E1914;
+  --w0: #EE6435; --w1: #7F62E6; --w2: #2F88E0; --w3: #22A668; --w4: #E04880; --w5: #D89A12; --edge: #8C7F6C; --bad: #FF7A63; --bad-soft: #55291F; --gold: #F7C543; --gold-2: #8A5A00; --on-region: #1E1914;
   --trace: #F27C42; --crowns: #A68DF2; --pairs: #5D94EE; --plots: #3AB18E; --wind: #EC6B9A; --sym-a: #F6B53A;
-  --r0: #E0834A; --r1: #8F71DA; --r2: #4CA5DA; --r3: #75B65F; --r4: #DCB232; --r5: #DB5F6D; --r6: #3EB3A1; --r7: #BC7FD0; --r8: #AA9E80; --r9: #BCC44E; --r10: #6F89DC;
+  --v0: #E0834A; --v1: #8F71DA; --v2: #4CA5DA; --v3: #75B65F; --v4: #DCB232; --v5: #DB5F6D; --v6: #3EB3A1; --v7: #BC7FD0; --v8: #AA9E80; --v9: #BCC44E; --v10: #6F89DC;
+  --r0: #A08CC2; --r1: #99BF89; --r2: #DBAC7D; --r3: #81A3DB; --r4: #BFBFBF; --r5: #DB6952; --r6: #C5D074; --r7: #9F9987; --r8: #BF89A4; --r9: #80AEB2; --r10: #DA7ECF;
   --shadow: 0 1px 0 rgba(0, 0, 0, .35);
   color-scheme: dark;
 } }
 :root[data-theme='dark'] {
   --bg: #17130F; --surface: #221D18; --ink: #F3EBDD; --ink-2: #D0C5B3; --muted: #9A8F7F; --line: #372F27;
   --cell: #2A241E; --cell-2: #3D352C; --grid: rgba(243, 235, 221, .1); --hole: #4A4136;
-  --edge: #8C7F6C; --bad: #FF7A63; --bad-soft: #55291F; --gold: #F7C543; --gold-2: #8A5A00; --on-region: #1E1914;
+  --w0: #EE6435; --w1: #7F62E6; --w2: #2F88E0; --w3: #22A668; --w4: #E04880; --w5: #D89A12; --edge: #8C7F6C; --bad: #FF7A63; --bad-soft: #55291F; --gold: #F7C543; --gold-2: #8A5A00; --on-region: #1E1914;
   --trace: #F27C42; --crowns: #A68DF2; --pairs: #5D94EE; --plots: #3AB18E; --wind: #EC6B9A; --sym-a: #F6B53A;
-  --r0: #E0834A; --r1: #8F71DA; --r2: #4CA5DA; --r3: #75B65F; --r4: #DCB232; --r5: #DB5F6D; --r6: #3EB3A1; --r7: #BC7FD0; --r8: #AA9E80; --r9: #BCC44E; --r10: #6F89DC;
+  --v0: #E0834A; --v1: #8F71DA; --v2: #4CA5DA; --v3: #75B65F; --v4: #DCB232; --v5: #DB5F6D; --v6: #3EB3A1; --v7: #BC7FD0; --v8: #AA9E80; --v9: #BCC44E; --v10: #6F89DC;
+  --r0: #A08CC2; --r1: #99BF89; --r2: #DBAC7D; --r3: #81A3DB; --r4: #BFBFBF; --r5: #DB6952; --r6: #C5D074; --r7: #9F9987; --r8: #BF89A4; --r9: #80AEB2; --r10: #DA7ECF;
   --shadow: 0 1px 0 rgba(0, 0, 0, .35);
   color-scheme: dark;
 }
@@ -162,18 +165,23 @@ a { color: inherit; }
 .region.r6 { fill: var(--r6); } .region.r7 { fill: var(--r7); } .region.r8 { fill: var(--r8); } .region.r9 { fill: var(--r9); } .region.r10 { fill: var(--r10); }
 .grid-thin { fill: none; stroke: var(--on-region); stroke-opacity: .2; stroke-width: 2; }
 .grid-thick { fill: none; stroke: var(--on-region); stroke-width: 5; stroke-linecap: square; }
-.crown path { fill: var(--on-region); stroke: var(--on-region); stroke-width: 5; stroke-linejoin: round; transform-origin: center; transform-box: fill-box; animation: spring .32s var(--ease); transition: fill .2s, stroke .2s; }
+/* the frame matches the region borders, so they meet it without a notch in dark mode */
+.crowns-board .board-edge { stroke: var(--on-region); }
+.crown path { fill: var(--on-region); stroke: var(--on-region); stroke-width: 5; stroke-linejoin: round; transform-origin: center; transform-box: fill-box; animation: crownIn .42s var(--spring) backwards; transition: fill .25s, stroke .25s; }
 .crown circle { fill: var(--cell); }
-.crown.is-bad path { fill: var(--bad); stroke: var(--bad); animation: spring .32s var(--ease), shake .4s var(--ease) .3s; }
-.cross { fill: none; stroke: var(--on-region); stroke-opacity: .62; stroke-width: 6; stroke-linecap: round; transform-origin: center; transform-box: fill-box; animation: crossIn .2s var(--spring); }
-.cross.is-auto { stroke-opacity: .24; animation: fade .3s var(--ease); }
-@keyframes crossIn { from { transform: scale(.3) rotate(-60deg); opacity: 0; } }
-.is-won .crown path { animation: gold .6s var(--spring) var(--d, 0ms) both; }
+.crown.is-bad path { fill: var(--bad); stroke: var(--bad); animation: crownIn .42s var(--spring) backwards, shake .4s var(--ease) .3s; }
+@keyframes crownIn { 0% { transform: translateY(-10px) scale(.35) rotate(-8deg); opacity: 0; } 35% { opacity: 1; } 100% { transform: none; } }
+.cross { fill: none; stroke: #5B5853; stroke-width: 6.5; stroke-linecap: round; transform-origin: center; transform-box: fill-box; animation: crossIn .24s var(--spring) backwards; }
+.cross.is-auto { stroke-opacity: .55; animation: fade .3s var(--ease); }
+@keyframes crossIn { from { transform: scale(.35) rotate(-70deg); opacity: 0; } 40% { opacity: 1; } }
+.is-won .crown path { animation: gold .7s var(--ease) var(--d, 0ms) both; }
 @keyframes gold {
-  0% { fill: var(--on-region); stroke: var(--on-region); transform: scale(1); }
-  45% { transform: scale(1.3) rotate(-6deg); }
-  100% { fill: var(--gold); stroke: var(--gold-2); transform: scale(1.12); }
+  0% { fill: var(--on-region); stroke: var(--on-region); transform: scale(1); filter: none; }
+  40% { transform: scale(1.32) rotate(-5deg); filter: drop-shadow(0 0 7px var(--gold)); }
+  70% { fill: var(--gold); stroke: var(--gold-2); transform: scale(1.04) rotate(1.5deg); }
+  100% { fill: var(--gold); stroke: var(--gold-2); transform: scale(1.1); filter: drop-shadow(0 0 3px color-mix(in srgb, var(--gold) 60%, transparent)); }
 }
+@media (prefers-reduced-motion: reduce) { .crown path, .cross { animation: none !important; } .is-won .crown path { fill: var(--gold); stroke: var(--gold-2); } }
 
 /* pairs */
 .sym { transform-origin: center; transform-box: fill-box; animation: flip .26s var(--ease); }
@@ -184,15 +192,18 @@ a { color: inherit; }
 .link circle { fill: var(--surface); stroke: var(--ink); stroke-opacity: .35; stroke-width: 2.5; }
 .link path { fill: none; stroke: var(--ink); stroke-width: 4.5; stroke-linecap: round; }
 .link.is-bad circle { fill: var(--bad); stroke: var(--bad); stroke-opacity: 1; } .link.is-bad path { stroke: #fff; }
-.link.is-bad { animation: shake .4s var(--ease); transform-box: fill-box; }
+.link { transform-box: fill-box; transform-origin: center; }
+.link circle { transition: fill .12s, stroke .12s; } .link path { transition: stroke .12s; }
+.link.is-bad { animation: shake .4s var(--ease); }
 
 /* plots */
 .plot { fill: var(--c); stroke: color-mix(in srgb, var(--c) 55%, var(--on-region)); stroke-width: 6; transform-origin: center; transform-box: fill-box; animation: spring .3s var(--ease); }
 .plot.is-bad { fill: color-mix(in srgb, var(--ink) 16%, var(--cell)); stroke: color-mix(in srgb, var(--ink) 45%, transparent); animation: spring .3s var(--ease), shake .42s var(--ease) .2s; }
-.plot-live { fill: color-mix(in srgb, var(--ink) 12%, transparent); stroke: color-mix(in srgb, var(--ink) 55%, transparent); stroke-width: 5; pointer-events: none; transition: x .08s, y .08s, width .08s, height .08s; }
+.plot-live { fill: color-mix(in srgb, var(--ink) 12%, transparent); stroke: color-mix(in srgb, var(--ink) 55%, transparent); stroke-width: 5; pointer-events: none; transition: x .05s, y .05s, width .05s, height .05s; }
+.plot-live.is-blocked { fill: color-mix(in srgb, var(--bad) 10%, transparent); stroke: color-mix(in srgb, var(--bad) 65%, transparent); stroke-dasharray: 10 8; }
 .plot-live.is-fit { fill: color-mix(in srgb, var(--c) 70%, transparent); stroke: color-mix(in srgb, var(--c) 55%, var(--on-region)); }
-.p0 { --c: var(--r0); } .p1 { --c: var(--r2); } .p2 { --c: var(--r3); } .p3 { --c: var(--r1); } .p4 { --c: var(--r4); } .p5 { --c: var(--r5); }
-.p6 { --c: var(--r6); } .p7 { --c: var(--r7); } .p8 { --c: var(--r10); } .p9 { --c: var(--r9); } .p10 { --c: var(--r8); }
+.p0 { --c: var(--v0); } .p1 { --c: var(--v2); } .p2 { --c: var(--v3); } .p3 { --c: var(--v1); } .p4 { --c: var(--v4); } .p5 { --c: var(--v5); }
+.p6 { --c: var(--v6); } .p7 { --c: var(--v7); } .p8 { --c: var(--v10); } .p9 { --c: var(--v9); } .p10 { --c: var(--v8); }
 .plot-size { font-weight: 800; font-size: 34px; text-anchor: middle; fill: var(--ink); paint-order: stroke; stroke: var(--cell); stroke-width: 10; pointer-events: none; }
 .is-won .clue { animation: fadeOut .35s var(--ease) .25s forwards; pointer-events: none; }
 @keyframes fadeOut { to { opacity: 0; transform: scale(.8); } }
@@ -212,10 +223,13 @@ a { color: inherit; }
 /* trace */
 .trace-seg { fill: none; stroke-width: 42; stroke-linecap: round; }
 .trace-head { stroke: var(--cell); stroke-width: 7; pointer-events: none; }
+.trace-guide .trace-seg { opacity: .42; animation: guide 1s ease-in-out infinite alternate; }
+.trace-chevron { fill: none; stroke: #fff; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; animation: nudge .6s ease-in-out infinite alternate; }
+@keyframes guide { to { opacity: .7; } }
 .trace-ring { fill: none; stroke-width: 5; opacity: 0; pointer-events: none; }
 .trace-ring.is-held { animation: ring 1s ease-out infinite; }
 @keyframes ring { 0% { opacity: .6; r: 26px; } 100% { opacity: 0; r: 46px; } }
-.trace-tail { stroke-width: 42; stroke-linecap: round; pointer-events: none; opacity: 0; }
+.trace-tail { stroke-width: 42; stroke-linecap: round; pointer-events: none; display: none; }
 .is-won .trace-segs { animation: glow 1.2s var(--ease); }
 @keyframes glow { 40% { filter: brightness(1.25) saturate(1.2); } }
 .trace-sweep { fill: none; stroke: #fff; stroke-opacity: .6; stroke-width: 16; stroke-linecap: round; stroke-dasharray: .12 1.3; pointer-events: none; animation: sweep 1.2s cubic-bezier(.45, 0, .3, 1) .1s both; }
@@ -228,15 +242,16 @@ a { color: inherit; }
 /* wind */
 .hole { fill: var(--hole); }
 .hole-edge { fill: none; stroke: var(--edge); stroke-width: 6; stroke-linecap: round; }
-.word-line, .sel-line { fill: none; stroke-width: 74; stroke-linecap: round; stroke-linejoin: round; }
-.word-line { stroke: var(--c); stroke-dasharray: 1; animation: draw .45s var(--ease) both; }
-@keyframes draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
-.sel-line { stroke: color-mix(in srgb, var(--wind) 75%, var(--ink)); }
-.wind-board.is-wrong .sel-line { stroke: var(--bad); }
+.word-line, .sel-seg { fill: none; stroke-width: 74; stroke-linecap: round; stroke-linejoin: round; stroke: var(--c); }
+.sel-head { fill: var(--c); pointer-events: none; }
+.word-line { animation: settle .35s var(--ease); }
+@keyframes settle { 40% { stroke-width: 84; } }
+.sel-tail { pointer-events: none; }
+.wind-board.is-wrong .sel-seg { stroke: var(--bad); }
+.wind-board.is-wrong .sel-head { fill: var(--bad); }
 .wind-board.is-wrong .board { animation: shake .4s var(--ease); }
-.letter { font-weight: 800; font-size: 44px; text-anchor: middle; fill: var(--ink); pointer-events: none; transition: fill .15s; }
-.letter.is-sel { fill: #fff; }
-.letter.is-found { fill: #fff; transition: fill .2s var(--ease) .15s; }
+.letter { font-weight: 800; font-size: 44px; text-anchor: middle; fill: var(--ink); pointer-events: none; }
+.letter.is-found { fill: #fff; }
 .word-start { fill: var(--wind); }
 .wind-theme { text-align: center; font-weight: 750; font-size: 20px; letter-spacing: -.015em; margin-bottom: 10px; }
 .wind-note { text-align: center; font-weight: 750; letter-spacing: .08em; min-height: 1.5em; margin-top: 8px; font-size: 17px; }
@@ -248,7 +263,7 @@ a { color: inherit; }
 .wind-words .is-found span:nth-child(2) { animation-delay: 30ms; } .wind-words .is-found span:nth-child(3) { animation-delay: 60ms; }
 .wind-words .is-found span:nth-child(4) { animation-delay: 90ms; } .wind-words .is-found span:nth-child(5) { animation-delay: 120ms; }
 .wind-words .is-found span:nth-child(n+6) { animation-delay: 150ms; }
-.w0 { --c: var(--r0); } .w1 { --c: var(--r2); } .w2 { --c: var(--r1); } .w3 { --c: var(--r3); } .w4 { --c: var(--r5); } .w5 { --c: var(--r6); }
+.w0 { --c: var(--w0); } .w1 { --c: var(--w1); } .w2 { --c: var(--w2); } .w3 { --c: var(--w3); } .w4 { --c: var(--w4); } .w5 { --c: var(--w5); }
 
 .play.is-done .board { animation: solved .6s var(--ease); }
 @keyframes solved { 35% { transform: scale(1.02); } }
