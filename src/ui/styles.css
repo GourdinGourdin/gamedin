@@ -194,6 +194,9 @@ a { color: inherit; }
 .p0 { --c: var(--r0); } .p1 { --c: var(--r2); } .p2 { --c: var(--r3); } .p3 { --c: var(--r1); } .p4 { --c: var(--r4); } .p5 { --c: var(--r5); }
 .p6 { --c: var(--r6); } .p7 { --c: var(--r7); } .p8 { --c: var(--r10); } .p9 { --c: var(--r9); } .p10 { --c: var(--r8); }
 .plot-size { font-weight: 800; font-size: 34px; text-anchor: middle; fill: var(--ink); paint-order: stroke; stroke: var(--cell); stroke-width: 10; pointer-events: none; }
+.is-won .clue { animation: fadeOut .35s var(--ease) .25s forwards; pointer-events: none; }
+@keyframes fadeOut { to { opacity: 0; transform: scale(.8); } }
+.clue { transform-origin: center; transform-box: fill-box; }
 .clue .badge { fill: #FFFBF3; stroke: var(--on-region); stroke-width: 4; transition: stroke .2s; }
 .clue.is-open .badge { stroke: color-mix(in srgb, var(--c) 70%, var(--ink)); stroke-width: 5; }
 .clue.is-any .badge { stroke-dasharray: 8 6; }

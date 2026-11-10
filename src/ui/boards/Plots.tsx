@@ -112,20 +112,22 @@ function Board({ puzzle: p, state, set, done, hint, preview }: BoardProps<PlotsP
     : anchor !== null && anchor !== focus ? span(cols, anchor, focus) : null;
   const liveClue = live ? clueOf(p, live) : -1;
   const hidden = drag && drag.a !== drag.b ? drag.base : null;
-  const box = ([t, l, h, w]: Rect, inset: number) => ({ x: l * U + inset, y: t * U + inset, width: w * U - inset * 2, height: h * U - inset * 2, rx: 12 });
+  const box = ([t, l, h, w]: Rect, inset: number, rx = 12) => ({ x: l * U + inset, y: t * U + inset, width: w * U - inset * 2, height: h * U - inset * 2, rx });
   const owner = new Map<number, number>();
   state.forEach((r) => { if (r === hidden) return; const k = clueOf(p, r); if (k !== -1) owner.set(k, 1); });
 
   const board = (
     <Frame rows={rows} cols={cols} preview={preview} label={`Plots board, ${rows} by ${cols}`} ref={ref}
+      className={`board${preview ? ' is-preview' : ''}${done && !preview ? ' is-won' : ''}`}
       onPointerDown={down} onPointerMove={moveTo} onPointerUp={up} onPointerCancel={() => setDrag(null)} onKeyDown={key}>
       <Tiles rows={rows} cols={cols} />
       {state.map((rect) => {
         if (rect === hidden) return null;
         const k = clueOf(p, rect);
-        return <rect key={rect.join()} className={k === -1 ? 'plot is-bad' : `plot p${k % 11}`} style={waveDelay(cols, rect[0] * cols + rect[1])} {...box(rect, 3)} />;
+        return <rect key={rect.join()} className={k === -1 ? 'plot is-bad' : `plot p${k % 11}`} style={waveDelay(cols, rect[0] * cols + rect[1])} {...box(rect, 3, 0)} />;
       })}
       {live && <rect className={`plot-live${liveClue !== -1 ? ` is-fit p${liveClue % 11}` : ''}`} {...box(live, 3)} />}
+      {/* once solved, the clues fade away and only the coloured blocks stay */}
       {p.clues.map((c, i) => {
         const [x, y] = mid(cols, c.cell), [w, h] = GLYPH[c.shape];
         return (
@@ -141,7 +143,7 @@ function Board({ puzzle: p, state, set, done, hint, preview }: BoardProps<PlotsP
     </Frame>
   );
   if (preview) return board;
-  return <div className="plots">{board}<Legend shapes={p.clues.map((c) => c.shape)} /></div>;
+  return <div className="plots">{board}{!done && <Legend shapes={p.clues.map((c) => c.shape)} />}</div>;
 }
 
 function hint(p: PlotsPuzzle, s: S, sol: Rect[]): Hint | null {
