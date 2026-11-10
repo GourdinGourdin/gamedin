@@ -78,7 +78,7 @@ function Board({ puzzle: p, state, set, done, hint, preview }: BoardProps<TraceP
     const [hx, hy] = mid(cols, path[L]), over = Math.max(0, a.p - L) * U;
     let ex = hx, ey = hy;
     if (a.p > L) { ex = hx + a.dir[0] * over; ey = hy + a.dir[1] * over; }
-    else if (L > 0) { const i = Math.min(L - 1, Math.floor(a.p)), [ax, ay] = mid(cols, path[i]), [bx, by] = mid(cols, path[i + 1]), f = a.p - i; ex = ax + (bx - ax) * f; ey = ay + (by - ay) * f; }
+    else if (L > 0) { const i = Math.max(0, Math.min(L - 1, Math.floor(a.p))), [ax, ay] = mid(cols, path[i]), [bx, by] = mid(cols, path[i + 1]), f = a.p - i; ex = ax + (bx - ax) * f; ey = ay + (by - ay) * f; }
     const t = tail.current;
     if (t) {
       t.setAttribute('x1', String(hx)); t.setAttribute('y1', String(hy)); t.setAttribute('x2', String(ex)); t.setAttribute('y2', String(ey));
@@ -89,7 +89,8 @@ function Board({ puzzle: p, state, set, done, hint, preview }: BoardProps<TraceP
   const tick = (now: number) => {
     const a = anim.current, d = drag.current;
     a.raf = 0;
-    const dt = Math.min(48, now - a.last || 16); a.last = now;
+    // a frame's timestamp can come before the time kick() noted: never step backwards (that drove p below 0)
+    const dt = Math.min(48, Math.max(0, now - a.last) || 16); a.last = now;
     if (d?.queue.length) { const pts = d.queue; d.queue = []; follow(pts, false); }
     const goal = live.current.length - 1 + stubTarget(), diff = goal - a.p;
     a.p = Math.abs(diff) < 0.004 ? goal : a.p + diff * (1 - Math.exp(-dt / 38));

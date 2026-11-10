@@ -7,7 +7,7 @@ const browser = await launch();
 for (const size of [180, 192, 512]) {
   const page = await browser.newPage({ viewport: { width: size, height: size } });
   // full-bleed square: phones round the corners themselves
-  await page.setContent(`<body style="margin:0;background:#15171C">${svg.replace('<svg ', `<svg width="${size}" height="${size}" `)}</body>`);
+  await page.setContent(`<body style="margin:0;background:#231E18">${svg.replace('<svg ', `<svg width="${size}" height="${size}" `)}</body>`);
   await page.screenshot({ path: `public/icon-${size}.png` });
   await page.close();
 }

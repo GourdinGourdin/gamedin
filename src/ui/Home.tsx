@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import type { GameId } from '../engine/index.ts';
 import { DIFF_LABEL, dailySpec, formatTime, GAME_IDS, META } from '../games.ts';
+import { LARPEDIN_URL } from '../links.ts';
 import { generate, takeSeed, type Generated } from '../gen.ts';
 import { dailyDone, getStore, resetAll, setSettings, streak, useStore } from '../store.ts';
 import { go } from './App.tsx';
 import { UI } from './boards/index.ts';
-import { Chart, Check, Gear, Logo } from './icons.tsx';
+import { Chart, Check, External, Gear, LarpedInMark, Logo } from './icons.tsx';
 import { Choice, Sheet, Toggle } from './Sheet.tsx';
 
 const COVER: Record<GameId, number> = { trace: 5, crowns: 6, pairs: 6, plots: 5, wind: 4 };
@@ -77,6 +78,15 @@ export function Home() {
           );
         })}
       </ul>
+
+      <section className="promo" aria-labelledby="promo-title">
+        <LarpedInMark size={56} />
+        <div className="promo-text">
+          <h2 id="promo-title">LarpedIn</h2>
+          <p>A free browser extension that solves LinkedIn's daily puzzles for you, in milliseconds.</p>
+        </div>
+        <a className="btn btn-quiet" href={LARPEDIN_URL} target="_blank" rel="noopener">Visit LarpedIn<External /></a>
+      </section>
 
       <footer className="foot">
         <p>GamedIn works offline and keeps your scores on this device. No account, no ads, no tracking.</p>

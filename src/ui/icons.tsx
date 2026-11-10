@@ -13,12 +13,34 @@ export const Check = () => <I d="M5 12.500l4.500 4.500L19 7.500" />;
 export const Close = () => <I d="M6 6l12 12M18 6L6 18" />;
 export const Help = () => <I d="M9.500 9a2.500 2.500 0 114 2c-.900.700-1.500 1.200-1.500 2.500M12 17.500v.010M12 21a9 9 0 100-18 9 9 0 000 18z" />;
 
+export const External = () => <I d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h4" />;
+
+/** The GamedIn mark: four real game pieces on a charcoal tile. Fixed colours, it does not invert in dark mode. */
 export const Logo = ({ size = 28 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true" className="logo-mark">
-    <rect width="64" height="64" rx="15" className="logo-bg" />
-    <rect x="13" y="13" width="17" height="17" rx="5" className="logo-tile" />
-    <rect x="34" y="13" width="17" height="17" rx="5" className="logo-hot" />
-    <rect x="13" y="34" width="17" height="17" rx="5" className="logo-tile" />
-    <rect x="34" y="34" width="17" height="17" rx="5" className="logo-tile" />
+    <rect width="64" height="64" rx="16" fill="#231E18" />
+    <rect x="9" y="9" width="21.5" height="21.5" rx="6" fill="#7650DE" />
+    <path d="M13 25.5 12 16.75 16.25 20.25 19.75 14.5 23.25 20.25 27.5 16.75 26.5 25.5Z" fill="#F7F0E1" stroke="#F7F0E1" strokeWidth="1.6" strokeLinejoin="round" />
+    <rect x="33.5" y="9" width="21.5" height="21.5" rx="6" fill="#F7F0E1" />
+    <circle cx="40.6" cy="16.1" r="4.3" fill="#F2A414" />
+    <rect x="43.8" y="19.3" width="7.8" height="7.8" rx="2.2" fill="#2C6BD3" />
+    <rect x="9" y="33.5" width="21.5" height="21.5" rx="6" fill="#F7F0E1" />
+    <path d="M15 39.5H20.5Q24.5 39.5 24.5 43.5V49" fill="none" stroke="#EC6A2E" strokeWidth="5.5" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="15" cy="39.5" r="3.4" fill="#231E18" />
+    <rect x="33.5" y="33.5" width="21.5" height="21.5" rx="6" fill="#1A8466" />
+    <rect x="38.6" y="38.6" width="11.3" height="11.3" rx="3" fill="#F7F0E1" />
+  </svg>
+);
+
+/** The LarpedIn mark, for the cross-promo card. */
+export const LarpedInMark = ({ size = 56 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true" className="logo-mark">
+    <rect width="64" height="64" rx="16" fill="#231E18" />
+    <path d="M25.25 26 24.25 17.25 28.5 20.75 32 15 35.5 20.75 39.75 17.25 38.75 26Z" fill="#EC6A2E" stroke="#EC6A2E" strokeWidth="1.6" strokeLinejoin="round" />
+    <path d="M8 35Q8 26 17 26Q26 26 32 31Q38 26 47 26Q56 26 56 35Q56 48 46 49.5Q38 50.5 32 43.5Q26 50.5 18 49.5Q8 48 8 35Z" fill="#F7F0E1" />
+    <rect x="14" y="32.5" width="12" height="9" rx="3.5" fill="#231E18" />
+    <rect x="38" y="32.5" width="12" height="9" rx="3.5" fill="#231E18" />
+    <circle cx="20" cy="37" r="2.7" fill="#EC6A2E" />
+    <circle cx="44" cy="37" r="2.7" fill="#EC6A2E" />
   </svg>
 );
