@@ -21,7 +21,10 @@ npm run build      # production build in dist/ (static files, host anywhere)
 npm test           # engine tests: validity, one solution, no guessing, repeatable seeds
 npm run e2e        # plays all five games in a real browser (needs the dev server on :5183)
 npm run bench      # generation speed and difficulty mix, e.g. `npm run bench crowns 100`
+npm run check:dist # production build: sub-path, installable, offline
 ```
+
+To put it online, see `HOSTING.md`.
 
 ## How it is built
 
