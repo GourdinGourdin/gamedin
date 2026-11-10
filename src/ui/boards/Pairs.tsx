@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import type { PairsPuzzle } from '../../engine/pairs/solve.ts';
 import { nextStep, stateFrom } from '../../engine/pairs/logic.ts';
-import { cellAt, Frame, FocusRing, HintMarks, mid, Tiles, U, useGridFocus, type BoardProps, type GameUI, type Hint } from './common.tsx';
+import { buzz, cellAt, Frame, FocusRing, HintMarks, mid, Tiles, U, useGridFocus, type BoardProps, type GameUI, type Hint } from './common.tsx';
 
 /** -1 empty, 0 circle, 1 square (givens included) */
 type S = number[];
@@ -34,7 +34,7 @@ function Board({ puzzle: p, state, set, done, hint, preview, settings }: BoardPr
     next[i] = state[i] === -1 ? 0 : state[i] === 0 ? 1 : -1;
     set(next);
   };
-  const down = (e: React.PointerEvent) => { const i = cellAt(ref.current!, e, N, N); if (i >= 0) { setFocus(i); cycle(i); } };
+  const down = (e: React.PointerEvent) => { if (e.button > 0) return; e.preventDefault(); const i = cellAt(ref.current!, e, N, N); if (i >= 0) { setFocus(i); cycle(i); buzz(6); } };
   const key = (e: React.KeyboardEvent) => {
     if (move(e.key) !== null) e.preventDefault();
     else if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); cycle(focus); }

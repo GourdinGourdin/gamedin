@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { rectCells, shapeOf, type PlotsPuzzle, type Rect } from '../../engine/plots/solve.ts';
 import { nextStep, stateFrom } from '../../engine/plots/logic.ts';
-import { cellAt, Frame, FocusRing, HintMarks, mid, Tiles, U, useGridFocus, type BoardProps, type GameUI, type Hint } from './common.tsx';
+import { buzz, cellAt, cellInside, Frame, gridPoint, FocusRing, HintMarks, mid, Tiles, U, useGridFocus, type BoardProps, type GameUI, type Hint } from './common.tsx';
 
 type S = Rect[];
 
@@ -36,24 +36,26 @@ function Board({ puzzle: p, state, set, done, hint, preview }: BoardProps<PlotsP
     return !!hit;
   };
   const down = (e: React.PointerEvent) => {
-    if (done) return;
+    if (done || e.button > 0) return;
     const i = cellAt(ref.current!, e, rows, cols);
     if (i < 0) return;
+    e.preventDefault();
     ref.current!.setPointerCapture(e.pointerId);
     setDrag({ a: i, b: i });
     setFocus(i);
   };
   const moveTo = (e: React.PointerEvent) => {
     if (!drag) return;
-    const i = cellAt(ref.current!, e, rows, cols);
-    if (i >= 0 && i !== drag.b) setDrag({ a: drag.a, b: i });
+    // switch corners only once the finger is well inside the next cell
+    const i = cellInside(gridPoint(ref.current!, e, cols), rows, cols, 0.15);
+    if (i >= 0 && i !== drag.b) { setDrag({ a: drag.a, b: i }); buzz(4); }
   };
   const up = () => {
     if (!drag) return;
     setDrag(null);
     // a tap removes the rectangle under it; a drag draws one
     if (drag.a === drag.b) { if (!removeAt(drag.a)) return; }
-    else commit(span(cols, drag.a, drag.b));
+    else { commit(span(cols, drag.a, drag.b)); buzz(10); }
   };
   const key = (e: React.KeyboardEvent) => {
     if (done) return;
@@ -67,6 +69,7 @@ function Board({ puzzle: p, state, set, done, hint, preview }: BoardProps<PlotsP
   };
 
   const live = drag && drag.a !== drag.b ? span(cols, drag.a, drag.b) : anchor !== null && anchor !== focus ? span(cols, anchor, focus) : null;
+  const liveClue = live ? clueOf(p, live) : -1;
   const box = ([t, l, h, w]: Rect, inset: number) => ({ x: l * U + inset, y: t * U + inset, width: w * U - inset * 2, height: h * U - inset * 2, rx: 20 });
   return (
     <Frame rows={rows} cols={cols} preview={preview} label={`Plots board, ${rows} by ${cols}`} ref={ref}
@@ -88,7 +91,7 @@ function Board({ puzzle: p, state, set, done, hint, preview }: BoardProps<PlotsP
           </g>
         );
       })}
-      {live && <rect className="plot-live" {...box(live, 5)} />}
+      {live && <rect className={`plot-live${liveClue !== -1 ? ` is-fit p${liveClue % 6}` : ''}`} {...box(live, 5)} />}
       {live && <text className="plot-size" x={(live[1] + live[3] / 2) * U} y={live[0] * U - 12 < 20 ? (live[0] + live[2]) * U + 34 : live[0] * U - 12}>{live[2] * live[3]}</text>}
       <HintMarks hint={hint} cols={cols} />
       {!preview && !done && <FocusRing cols={cols} cell={focus} />}

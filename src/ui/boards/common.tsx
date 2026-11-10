@@ -1,4 +1,4 @@
-import { useCallback, useState, type ReactNode, type SVGProps } from 'react';
+import React, { useCallback, useState, type ReactNode, type SVGProps } from 'react';
 import type { Settings } from '../../store.ts';
 
 /** Cell size in SVG units. */
@@ -44,6 +44,33 @@ export function cellAt(svg: SVGSVGElement, e: { clientX: number; clientY: number
   return c < 0 || r < 0 || c >= cols || r >= rows ? -1 : r * cols + c;
 }
 
+/** Pointer position in cell units (x = column, y = row, fractional). */
+export function gridPoint(svg: SVGSVGElement, e: { clientX: number; clientY: number }, cols: number): { x: number; y: number } {
+  const box = svg.getBoundingClientRect();
+  const scale = box.width / (cols * U + PAD * 2);
+  return { x: ((e.clientX - box.left) / scale - PAD) / U, y: ((e.clientY - box.top) / scale - PAD) / U };
+}
+
+/** The cell under a point, but only when the point is well inside it (not
+ *  near an edge or corner). Stops jitter at cell borders and wrong picks when
+ *  a finger cuts a corner. */
+export function cellInside(p: { x: number; y: number }, rows: number, cols: number, inset = 0.18): number {
+  const c = Math.floor(p.x), r = Math.floor(p.y);
+  if (c < 0 || r < 0 || c >= cols || r >= rows) return -1;
+  const fx = p.x - c, fy = p.y - r;
+  return fx < inset || fx > 1 - inset || fy < inset || fy > 1 - inset ? -1 : r * cols + c;
+}
+
+/** Points every ~quarter cell from a to b, so a fast swipe visits every cell it crosses. */
+export function samples(a: { x: number; y: number } | null, b: { x: number; y: number }): { x: number; y: number }[] {
+  if (!a) return [b];
+  const n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / 0.22));
+  return Array.from({ length: n }, (_, i) => ({ x: a.x + ((b.x - a.x) * (i + 1)) / n, y: a.y + ((b.y - a.y) * (i + 1)) / n }));
+}
+
+/** A short tap of the phone's vibration motor, where supported. */
+export const buzz = (ms = 8) => { try { navigator.vibrate?.(ms); } catch { /* not supported */ } };
+
 export const xy = (cols: number, i: number): [number, number] => [(i % cols) * U, Math.floor(i / cols) * U];
 export const mid = (cols: number, i: number): [number, number] => [(i % cols) * U + U / 2, Math.floor(i / cols) * U + U / 2];
 
@@ -61,10 +88,10 @@ export function useGridFocus(rows: number, cols: number) {
   return { focus, setFocus, move };
 }
 
-export function Frame({ rows, cols, preview, label, children, ...rest }:
+export function Frame({ rows, cols, preview, label, children, className, ...rest }:
   { rows: number; cols: number; preview?: boolean; label: string } & SVGProps<SVGSVGElement>) {
   return (
-    <svg className={`board${preview ? ' is-preview' : ''}`} viewBox={`${-PAD} ${-PAD} ${cols * U + PAD * 2} ${rows * U + PAD * 2}`}
+    <svg className={className ?? `board${preview ? ' is-preview' : ''}`} onContextMenu={(e) => e.preventDefault()} viewBox={`${-PAD} ${-PAD} ${cols * U + PAD * 2} ${rows * U + PAD * 2}`}
       role={preview ? 'img' : 'application'} aria-label={label} tabIndex={preview ? undefined : 0} {...rest}>
       {children}
     </svg>
@@ -91,7 +118,8 @@ export function Tiles({ rows, cols, className }: { rows: number; cols: number; c
   const out = [];
   for (let i = 0; i < rows * cols; i++) {
     const [x, y] = xy(cols, i);
-    out.push(<rect key={i} className={`tile ${className?.(i) ?? ''}`} x={x + 4} y={y + 4} width={U - 8} height={U - 8} rx={16} />);
+    out.push(<rect key={i} className={`tile ${className?.(i) ?? ''}`} x={x + 4} y={y + 4} width={U - 8} height={U - 8} rx={16}
+      style={{ '--d': `${(Math.floor(i / cols) + (i % cols)) * 45}ms` } as React.CSSProperties} />);
   }
   return <g>{out}</g>;
 }

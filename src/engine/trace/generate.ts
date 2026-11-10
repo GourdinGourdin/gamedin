@@ -5,7 +5,7 @@ import type { Difficulty, Grade } from '../types.ts';
 import { traceNeighbors, type TracePuzzle, type WallDir } from './solve.ts';
 
 export interface TraceGame { puzzle: TracePuzzle; solution: number[]; grade: Grade }
-export const TRACE_SIZES = [5, 6, 7, 8];
+export const TRACE_SIZES = [6, 7, 8];
 
 /** Random Hamiltonian path on an N x N grid (backbite moves from a snake). */
 export function randomPath(N: number, r: Rng): number[] {
@@ -78,19 +78,42 @@ export function solveAllTrace(p: TracePuzzle, limit = 2, maxNodes = 150000): num
   return aborted ? null : out;
 }
 
-const STOPS: Record<Difficulty, number> = { easy: 0.26, medium: 0.19, hard: 0.13 };
+// A real 6x6 day: 6 numbers and 10 walls. An 8x8 day: 16 numbers. Numbers stay
+// sparse and walls do much of the work, laid in short straight runs.
+const STOPS: Record<Difficulty, number> = { easy: 0.22, medium: 0.16, hard: 0.12 };
 
 function build(N: number, difficulty: Difficulty, r: Rng): { puzzle: TracePuzzle; solution: number[] } | null {
   const path = randomPath(N, r), n = N * N, at = new Int32Array(n);
   path.forEach((c, i) => { at[c] = i; });
   const stops = new Set([0, n - 1]);
-  const want = Math.max(4, Math.round(n * STOPS[difficulty]));
+  const hasWalls = r() < 0.7;
+  const want = Math.max(4, Math.round(n * STOPS[difficulty] * (hasWalls ? 0.7 : 1)));
   for (const i of shuffle(r, [...Array(n - 2).keys()].map((i) => i + 1))) {
     if (stops.size >= want) break;
     // keep stops apart so the numbers do not give the route away
     if (![...stops].some((s) => Math.abs(s - i) < 2)) stops.add(i);
   }
   const walls: [number, WallDir][] = [];
+  if (hasWalls) {
+    const onPath = new Set<string>();
+    for (let i = 0; i + 1 < n; i++) onPath.add(`${Math.min(path[i], path[i + 1])},${Math.max(path[i], path[i + 1])}`);
+    const free = (a: number, b: number) => !onPath.has(`${Math.min(a, b)},${Math.max(a, b)}`);
+    const taken = new Set<string>(), budget = Math.round(n * (0.16 + r() * 0.16));
+    for (let tries = 0; walls.length < budget && tries < 200; tries++) {
+      // a run of walls along one grid line
+      const down = r() < 0.5, len = 1 + randInt(r, 3);
+      let c = randInt(r, n);
+      for (let k = 0; k < len; k++) {
+        const row = Math.floor(c / N), col = c % N;
+        if (down ? row >= N - 1 : col >= N - 1) break;
+        const d = down ? c + N : c + 1, id = `${c}${down ? 'D' : 'R'}`;
+        if (!free(c, d) || taken.has(id)) break;
+        taken.add(id); walls.push([c, down ? 'DOWN' : 'RIGHT']);
+        if (down ? col >= N - 1 : row >= N - 1) break;
+        c = down ? c + 1 : c + N;
+      }
+    }
+  }
   const puzzle = (): TracePuzzle => ({
     rows: N, cols: N, walls,
     numbers: Object.fromEntries([...stops].sort((a, b) => a - b).map((i, k) => [path[i], k])),

@@ -31,21 +31,36 @@ function neighbours(N: number, i: number): number[] {
   return out;
 }
 
+// Region style, from 667 past daily boards: a couple of tiny regions (1 to 3
+// cells) on every board, several regions that run along a row or column, and
+// a few large sprawling ones.
 function growRegions(N: number, cols: number[], r: Rng): number[] {
-  const reg = new Array<number>(N * N).fill(-1);
-  // uneven growth rates give a mix of small and sprawling regions
-  const weight = cols.map(() => 0.15 + r() ** 2.2);
+  const reg = new Array<number>(N * N).fill(-1), size = new Array<number>(N).fill(1);
+  const ids = shuffle(r, [...Array(N).keys()]);
+  const cap = new Array<number>(N).fill(Infinity);
+  const tiny = (N >= 10 ? 2 : 1) + (r() < 0.35 ? 1 : 0);
+  ids.slice(0, tiny).forEach((k) => { cap[k] = 1 + randInt(r, 3); });
+  // 0 = no preference, 1 = along its row, 2 = along its column
+  const dir = cols.map(() => (r() < 0.5 ? 1 + randInt(r, 2) : 0));
+  const weight = cols.map(() => 0.45 + 1.3 * r() ** 1.4);
   cols.forEach((c, row) => { reg[row * N + c] = row; });
   for (let left = N * N - N; left > 0; left--) {
-    const opts: [number, number][] = [];
-    let total = 0;
-    for (let i = 0; i < N * N; i++) {
-      if (reg[i] !== -1) continue;
-      for (const j of neighbours(N, i)) if (reg[j] !== -1) { opts.push([i, reg[j]]); total += weight[reg[j]]; }
+    let opts: [number, number, number][] = [];
+    for (let pass = 0; pass < 2 && !opts.length; pass++) {
+      for (let i = 0; i < N * N; i++) {
+        if (reg[i] !== -1) continue;
+        for (const j of neighbours(N, i)) {
+          const k = reg[j];
+          if (k === -1 || (pass === 0 && size[k] >= cap[k])) continue;
+          const along = Math.abs(i - j) === 1 ? 1 : 2;
+          opts.push([i, k, weight[k] * (dir[k] === along ? 5 : dir[k] ? 0.4 : 1)]);
+        }
+      }
     }
-    let x = r() * total, chosen = opts[opts.length - 1];
-    for (const o of opts) { x -= weight[o[1]]; if (x <= 0) { chosen = o; break; } }
+    let x = r() * opts.reduce((a, o) => a + o[2], 0), chosen = opts[opts.length - 1];
+    for (const o of opts) { x -= o[2]; if (x <= 0) { chosen = o; break; } }
     reg[chosen[0]] = chosen[1];
+    size[chosen[1]]++;
   }
   return reg;
 }
@@ -96,7 +111,7 @@ function looksGood(p: CrownsPuzzle): boolean {
   return size.filter((s) => s === 1).length <= (p.size >= 9 ? 2 : 1);
 }
 
-export const CROWNS_SIZES = [6, 7, 8, 9, 10];
+export const CROWNS_SIZES = [7, 8, 9, 10, 11];
 const ORDER: Difficulty[] = ['easy', 'medium', 'hard'];
 
 export function generateCrowns(size: number, difficulty: Difficulty, seed: string): CrownsGame {

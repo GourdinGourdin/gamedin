@@ -98,8 +98,9 @@ a { color: inherit; }
 
 /* play */
 .play { display: flex; flex-direction: column; max-width: 640px; }
-.stage { flex: 1; display: grid; place-items: center; padding: 14px 0 10px; min-height: 0; }
-.board, .board-wait { display: block; width: min(100%, 560px, calc(100dvh - 300px)); min-width: 240px; touch-action: none; user-select: none; -webkit-user-select: none; font-family: var(--font); }
+.stage { flex: 1; display: grid; place-items: start center; padding: 18px 0 10px; min-height: 0; }
+@media (min-height: 900px) { .stage { padding-top: 6vh; } }
+.board, .board-wait { -webkit-touch-callout: none; display: block; width: min(100%, 560px, calc(100dvh - 300px)); min-width: 240px; touch-action: none; user-select: none; -webkit-user-select: none; font-family: var(--font); }
 .board:focus { outline: none; }
 .board-wait { aspect-ratio: 1; border-radius: 22px; background: var(--cell); animation: wait 1.2s ease-in-out infinite alternate; }
 @keyframes wait { to { opacity: .45; } }
@@ -155,6 +156,8 @@ a { color: inherit; }
 .plot { stroke-width: 6; fill: color-mix(in srgb, var(--c) 30%, transparent); stroke: var(--c); animation: pop .16s var(--ease); transform-origin: center; transform-box: fill-box; }
 .plot.p0 { --c: var(--plots); } .plot.p1 { --c: var(--pairs); } .plot.p2 { --c: var(--sym-a); } .plot.p3 { --c: var(--wind); } .plot.p4 { --c: var(--crowns); } .plot.p5 { --c: var(--trace); }
 .plot.is-bad { --c: var(--bad); fill: color-mix(in srgb, var(--bad) 10%, transparent); stroke-dasharray: 14 10; }
+.plot-live.is-fit { stroke: var(--c); fill: color-mix(in srgb, var(--c) 25%, transparent); stroke-dasharray: none; }
+.plot-live.p0 { --c: var(--plots); } .plot-live.p1 { --c: var(--pairs); } .plot-live.p2 { --c: var(--sym-a); } .plot-live.p3 { --c: var(--wind); } .plot-live.p4 { --c: var(--crowns); } .plot-live.p5 { --c: var(--trace); }
 .plot-live { fill: color-mix(in srgb, var(--ink) 10%, transparent); stroke: var(--ink); stroke-width: 5; stroke-dasharray: 12 9; pointer-events: none; }
 .plot-size { font-weight: 800; font-size: 34px; text-anchor: middle; fill: var(--ink); paint-order: stroke; stroke: var(--bg); stroke-width: 10; }
 .clue rect, .clue-any { fill: var(--surface); stroke: var(--ink); stroke-width: 4; }
@@ -162,8 +165,12 @@ a { color: inherit; }
 .clue text { font-weight: 800; font-size: 28px; text-anchor: middle; fill: var(--ink); }
 
 .trace-line { fill: none; stroke: var(--trace); stroke-width: 46; stroke-linecap: round; stroke-linejoin: round; }
-.trace-head { fill: var(--trace); stroke: var(--surface); stroke-width: 6; }
-.walls line { stroke: var(--ink); stroke-width: 10; stroke-linecap: round; }
+.trace-head { fill: var(--trace); stroke: var(--surface); stroke-width: 6; transition: r .12s var(--ease); }
+.trace-head.is-held { r: 26px; }
+.trace-tail { stroke-linecap: round; }
+.stop circle { transition: fill .15s; }
+.stop.is-reached circle { fill: var(--trace); }
+.walls line { stroke: var(--ink); stroke-width: 11; stroke-linecap: round; }
 .stop circle { fill: var(--ink); } .stop text { fill: var(--bg); font-weight: 800; font-size: 32px; text-anchor: middle; }
 
 .word-line, .sel-line { fill: none; stroke-width: 76; stroke-linecap: round; stroke-linejoin: round; }
@@ -183,8 +190,11 @@ a { color: inherit; }
 .wind-words .is-found.w0 span { background: var(--wind); } .wind-words .is-found.w1 span { background: var(--crowns); }
 .wind-words .is-found.w2 span { background: var(--pairs); } .wind-words .is-found.w3 span { background: var(--plots); }
 
-.play.is-done .board { animation: solved .5s var(--ease); }
-@keyframes solved { 40% { transform: scale(1.025); } }
+.play.is-done .board { animation: solved .6s var(--ease); }
+@keyframes solved { 35% { transform: scale(1.02); } }
+/* the win: a light wave sweeps across the board from the top-left corner */
+.play.is-done .board .tile, .play.is-done .board .region { animation: wave .55s var(--ease) var(--d, 0ms) both; }
+@keyframes wave { 40% { filter: brightness(1.18) saturate(1.15); } }
 
 /* sheets */
 .sheet { border: 0; padding: 0; background: transparent; color: inherit; width: min(100%, 460px); max-width: 100%; margin: auto auto 0; max-height: 92dvh; }

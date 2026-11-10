@@ -1,7 +1,7 @@
-import { useRef, type ReactNode } from 'react';
+import React, { useRef, type ReactNode } from 'react';
 import type { CrownsPuzzle } from '../../engine/crowns/solve.ts';
 import { CROWN, nextStep, reach, stateFrom } from '../../engine/crowns/logic.ts';
-import { cellAt, Frame, FocusRing, HintMarks, mid, U, useGridFocus, xy, type BoardProps, type GameUI, type Hint } from './common.tsx';
+import { buzz, cellAt, cellInside, Frame, gridPoint, samples, FocusRing, HintMarks, mid, U, useGridFocus, xy, type BoardProps, type GameUI, type Hint } from './common.tsx';
 
 /** 0 empty, 1 crossed out, 2 crown */
 type S = number[];
@@ -22,31 +22,37 @@ export const CROWN_PATH = 'M-27 20 L-31 -15 L-14 -1 L0 -24 L14 -1 L31 -15 L27 20
 
 function Board({ puzzle: p, state, set, done, hint, preview, settings }: BoardProps<CrownsPuzzle, S, number[]>) {
   const N = p.size, ref = useRef<SVGSVGElement>(null);
-  const drag = useRef<{ start: number; moved: boolean; base: S } | null>(null);
+  const drag = useRef<{ start: number; moved: boolean; base: S; erase: boolean; pt: { x: number; y: number } } | null>(null);
   const { focus, setFocus, move } = useGridFocus(N, N);
   const bad = conflicts(p, state);
   const auto = new Set<number>();
   if (settings.autoCross && !preview) for (const c of crownCells(state)) for (const i of reach(N, p.regions, c)) if (state[i] === EMPTY) auto.add(i);
 
-  const cycle = (i: number) => { const next = state.slice(); next[i] = (state[i] + 1) % 3; set(next); };
+  const cycle = (i: number) => { const next = state.slice(); next[i] = (state[i] + 1) % 3; if (next[i] === QUEEN) buzz(12); set(next); };
   const down = (e: React.PointerEvent) => {
     if (done) return;
     const i = cellAt(ref.current!, e, N, N);
     if (i < 0) return;
+    e.preventDefault();
     ref.current!.setPointerCapture(e.pointerId);
-    drag.current = { start: i, moved: false, base: state };
+    // a drag that starts on a cross clears crosses; otherwise it adds them
+    drag.current = { start: i, moved: false, base: state, erase: state[i] === CROSS, pt: gridPoint(ref.current!, e, N) };
     setFocus(i);
   };
   const moveTo = (e: React.PointerEvent) => {
     const d = drag.current;
     if (!d) return;
-    const i = cellAt(ref.current!, e, N, N);
-    if (i < 0 || (i === d.start && !d.moved)) return;
-    // dragging crosses out every empty cell it passes
-    const cur = d.moved ? state : d.base, next = cur.slice();
+    const pt = gridPoint(ref.current!, e, N);
+    const cells: number[] = [];
+    for (const sp of samples(d.pt, pt)) { const c = cellInside(sp, N, N, 0.08); if (c >= 0 && !cells.includes(c)) cells.push(c); }
+    d.pt = pt;
+    if (!d.moved && cells.every((c) => c === d.start)) return;
+    const next = (d.moved ? state : d.base).slice();
     let changed = false;
-    for (const c of d.moved ? [i] : [d.start, i]) if (next[c] === EMPTY) { next[c] = CROSS; changed = true; }
-    if (changed) set(next, d.moved);
+    for (const c of d.moved ? cells : [d.start, ...cells]) {
+      if (d.erase ? next[c] === CROSS : next[c] === EMPTY) { next[c] = d.erase ? EMPTY : CROSS; changed = true; }
+    }
+    if (changed || !d.moved) set(next, d.moved);
     d.moved = true;
   };
   const up = () => {
@@ -63,7 +69,7 @@ function Board({ puzzle: p, state, set, done, hint, preview, settings }: BoardPr
   const cells: ReactNode[] = [], thin: ReactNode[] = [], thick: ReactNode[] = [], marks: ReactNode[] = [];
   for (let i = 0; i < N * N; i++) {
     const [x, y] = xy(N, i), r = Math.floor(i / N), c = i % N;
-    cells.push(<rect key={i} x={x} y={y} width={U} height={U} className={`region r${p.regions[i] % 10}`} />);
+    cells.push(<rect key={i} x={x} y={y} width={U} height={U} className={`region r${p.regions[i] % 10}`} style={{ '--d': `${(r + c) * 45}ms` } as React.CSSProperties} />);
     if (c < N - 1) (p.regions[i] !== p.regions[i + 1] ? thick : thin).push(<line key={`v${i}`} x1={x + U} y1={y} x2={x + U} y2={y + U} />);
     if (r < N - 1) (p.regions[i] !== p.regions[i + N] ? thick : thin).push(<line key={`h${i}`} x1={x} y1={y + U} x2={x + U} y2={y + U} />);
     const [cx, cy] = mid(N, i);

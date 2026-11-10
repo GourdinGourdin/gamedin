@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { WindGamePuzzle } from '../../engine/wind/generate.ts';
-import { cellAt, Frame, HintMarks, mid, Tiles, U, type BoardProps, type GameUI, type Hint } from './common.tsx';
+import { buzz, cellAt, cellInside, Frame, gridPoint, samples, HintMarks, mid, Tiles, U, type BoardProps, type GameUI, type Hint } from './common.tsx';
 
 interface Sol { paths: number[][]; words: string[] }
 /** found: indexes of solved words; starts: indexes of words whose first tile a hint revealed */
@@ -12,7 +12,7 @@ function Board({ puzzle: p, solution: sol, state, set, done, hint, preview }: Bo
   const { rows, cols } = p, ref = useRef<SVGSVGElement>(null);
   const [sel, setSel] = useState<number[]>([]);
   const [note, setNote] = useState<{ text: string; bad: boolean } | null>(null);
-  const press = useRef<{ grew: boolean } | null>(null), live = useRef(sel);
+  const press = useRef<{ grew: boolean; pt: { x: number; y: number } } | null>(null), live = useRef(sel);
   live.current = sel;
   useEffect(() => { setSel([]); setNote(null); }, [p]);
 
@@ -25,7 +25,7 @@ function Board({ puzzle: p, solution: sol, state, set, done, hint, preview }: Bo
     const word = path.map((c) => p.letters[c]).join('');
     const i = sol.words.findIndex((w, k) => !state.found.includes(k) && w === word && sameCells(sol.paths[k], path));
     update([]);
-    if (i !== -1) { setNote(null); set({ ...state, found: [...state.found, i] }); return; }
+    if (i !== -1) { setNote(null); buzz(18); set({ ...state, found: [...state.found, i] }); return; }
     const rightWord = sol.words.some((w, k) => !state.found.includes(k) && w === word);
     setNote({ bad: true, text: rightWord ? `${word} is in here, but on other tiles.` : path.length < 3 ? 'Words have at least three letters.' : `${word} is not one of the words.` });
   };
@@ -45,13 +45,19 @@ function Board({ puzzle: p, solution: sol, state, set, done, hint, preview }: Bo
     const cur = live.current;
     // tapping the last tile again sends the word
     if (cur.length >= 2 && cur[cur.length - 1] === cell) { submit(cur); return; }
-    press.current = { grew: false };
+    e.preventDefault();
+    press.current = { grew: false, pt: gridPoint(ref.current!, e, cols) };
     if (!step(cell)) update([cell]);
   };
   const moveTo = (e: React.PointerEvent) => {
     if (!press.current) return;
-    const cell = cellAt(ref.current!, e, rows, cols);
-    if (cell >= 0 && cell !== live.current[live.current.length - 1] && step(cell)) press.current.grew = true;
+    const pt = gridPoint(ref.current!, e, cols);
+    for (const sp of samples(press.current.pt, pt)) {
+      // tiles are picked near their centre, so cutting a corner never grabs the wrong letter
+      const cell = cellInside(sp, rows, cols, 0.2);
+      if (cell >= 0 && cell !== live.current[live.current.length - 1] && step(cell)) { press.current.grew = true; buzz(5); }
+    }
+    press.current.pt = pt;
   };
   const up = () => {
     const pr = press.current;

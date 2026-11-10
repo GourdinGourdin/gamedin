@@ -7,7 +7,7 @@ import { GAMES, type GameId } from '../src/engine/index.ts';
 import { rectCells } from '../src/engine/plots/solve.ts';
 
 const BASE = process.env.BASE ?? 'http://localhost:5183';
-const SPECS: [GameId, number, 'easy' | 'medium' | 'hard'][] = [['trace', 6, 'medium'], ['crowns', 8, 'medium'], ['pairs', 6, 'hard'], ['plots', 6, 'hard'], ['wind', 5, 'medium']];
+const SPECS: [GameId, number, 'easy' | 'medium' | 'hard'][] = [['trace', 7, 'medium'], ['crowns', 8, 'medium'], ['pairs', 6, 'hard'], ['plots', 6, 'hard'], ['wind', 5, 'medium']];
 mkdirSync('shots', { recursive: true });
 
 const browser = await launch();
@@ -75,12 +75,14 @@ for (const [name, viewport, scheme] of [['phone', { width: 390, height: 844 }, '
   {
     const d = new Date(), day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const wd = d.getDay(), difficulty = wd === 1 || wd === 2 ? 'easy' : wd === 0 || wd === 6 ? 'hard' : 'medium';
-    const g = GAMES.crowns.generate(8, difficulty, `daily-${day}`);
+    const { dailySpec } = await import('../src/games.ts');
+    const spec = dailySpec('crowns', day), g = GAMES.crowns.generate(spec.size, spec.difficulty, spec.seed);
+    void difficulty;
     await page.goto(`${BASE}/#/daily/crowns`);
     await page.waitForSelector('.stage svg.board');
     await page.focus('.stage svg.board');
     let col = 0;
-    for (let r = 0; r < 8; r++) {
+    for (let r = 0; r < spec.size; r++) {
       const want = g.solution[r];
       for (; col < want; col++) await page.keyboard.press('ArrowRight');
       for (; col > want; col--) await page.keyboard.press('ArrowLeft');

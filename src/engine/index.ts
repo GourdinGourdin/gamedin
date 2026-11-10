@@ -19,7 +19,7 @@ export interface GameDef {
 }
 
 export const GAMES: Record<GameId, GameDef> = {
-  trace: { id: 'trace', sizes: TRACE_SIZES, defaultSize: 6, generate: generateTrace, isUnique: (p) => solveAllTrace(p, 2, 2e6)?.length === 1 },
+  trace: { id: 'trace', sizes: TRACE_SIZES, defaultSize: 7, generate: generateTrace, isUnique: (p) => solveAllTrace(p, 2, 2e6)?.length === 1 },
   crowns: { id: 'crowns', sizes: CROWNS_SIZES, defaultSize: 8, generate: generateCrowns, isUnique: (p) => countCrowns(p, 2) === 1 },
   pairs: { id: 'pairs', sizes: PAIRS_SIZES, defaultSize: 6, generate: generatePairs, isUnique: (p) => countPairsSolutions(p, 2) === 1 },
   plots: { id: 'plots', sizes: PLOTS_SIZES, defaultSize: 6, generate: generatePlots, isUnique: (p) => countPlots(p, 2) === 1 },
