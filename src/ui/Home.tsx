@@ -61,7 +61,7 @@ export function Home() {
             <li key={id} className={`game g-${id}`}>
               <button className="game-cover" onClick={() => startGame(id)} aria-label={`Play ${m.name}`}><Cover game={id} /></button>
               <div className="game-text">
-                <h2>{m.name}</h2>
+                <h2><a href={`${id}/`}>{m.name}</a></h2>
                 <p>{m.rule}</p>
               </div>
               <div className="game-actions">

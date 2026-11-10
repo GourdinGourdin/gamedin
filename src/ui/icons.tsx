@@ -44,3 +44,9 @@ export const LarpedInMark = ({ size = 56 }: { size?: number }) => (
     <circle cx="44" cy="37" r="2.7" fill="#EC6A2E" />
   </svg>
 );
+
+/** A time like 1:23. Only the digits are tabular, so the colon keeps its natural width. */
+export const Time = ({ text }: { text: string }) => {
+  const [m, sec] = text.split(':');
+  return <><span className="tnum">{m}</span>:<span className="tnum">{sec}</span></>;
+};

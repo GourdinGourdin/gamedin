@@ -3,11 +3,11 @@ import type { GameId } from '../engine/index.ts';
 import type { Difficulty } from '../engine/types.ts';
 import { DIFF_LABEL, formatTime, META } from '../games.ts';
 import { generate, nextSeed, takeSeed, type Generated } from '../gen.ts';
-import { addResult, getStore, saveProgress, setPref, setSettings, useStore } from '../store.ts';
+import { addResult, getStore, saveProgress, setPref, setSettings, streak, useStore } from '../store.ts';
 import { go } from './App.tsx';
 import { UI } from './boards/index.ts';
 import type { Hint } from './boards/common.tsx';
-import { Back, Bulb, Help, Restart, Share, Sliders, Undo } from './icons.tsx';
+import { Back, Bulb, Help, Restart, Share, Sliders, Undo, Time } from './icons.tsx';
 import { Choice, Sheet } from './Sheet.tsx';
 
 type ClockRef = RefObject<{ ms: number; last: number }>;
@@ -28,7 +28,7 @@ function Clock({ clock, running }: { clock: ClockRef; running: boolean }) {
     return () => { step(); clearInterval(id); };
   }, [running, clock]);
   const ms = clock.current.ms;
-  return <time className="clock" aria-label={`Time ${formatTime(ms)}`}>{formatTime(ms)}</time>;
+  return <time className="clock" aria-label={`Time ${formatTime(ms)}`}><Time text={formatTime(ms)} /></time>;
 }
 
 interface Props { game: GameId; size: number; difficulty: Difficulty; seed: string; daily?: string }
@@ -77,7 +77,16 @@ export function Play({ game, size, difficulty, seed, daily }: Props) {
   const setRef = useRef<(next: unknown, merge?: boolean) => void>(() => {});
   const stableSet = useCallback((next: unknown, merge?: boolean) => setRef.current(next, merge), []);
 
-  if (failed) return <div className="page"><p className="empty">This puzzle could not be made. <a href="#/">Back to all games</a></p></div>;
+  if (failed) return (
+    <div className="page play">
+      <header className="top"><button className="icon-btn" onClick={() => go('/')} aria-label="Back to all games"><Back /></button></header>
+      <div className="empty-card" role="alert">
+        <h2>Could not make this puzzle</h2>
+        <p>Something went wrong while building the board. A fresh one usually works.</p>
+        <button className="btn btn-primary" onClick={() => go(`/play/${game}/${size}/${difficulty}/${takeSeed(game, size, difficulty)}`)}>Try another</button>
+      </div>
+    </div>
+  );
 
   const finish = (final: unknown) => {
     if (!g || !ui.solved(g.puzzle, final, g.solution)) return;
@@ -109,7 +118,7 @@ export function Play({ game, size, difficulty, seed, daily }: Props) {
   const next = (s = size, d = difficulty) => go(`/play/${game}/${s}/${d}/${takeSeed(game, s, d)}`);
   const share = async () => {
     const url = `${location.origin}${location.pathname}#/${daily ? `daily/${game}` : key}`;
-    const text = done ? `${m.name} ${m.sizeLabel(size)} ${DIFF_LABEL[difficulty]} in ${formatTime(ms)} on GamedIn` : `${m.name} on GamedIn`;
+    const text = `${daily ? 'Daily ' : ''}${m.name} ${m.sizeLabel(size)} ${DIFF_LABEL[difficulty]}, solved in ${formatTime(ms)}${hints ? ` with ${hints} hint${hints === 1 ? '' : 's'}` : ''}. Can you beat it?`;
     try {
       if (navigator.share) await navigator.share({ title: 'GamedIn', text, url });
       else { await navigator.clipboard.writeText(`${text}\n${url}`); setCopied(true); setTimeout(() => setCopied(false), 1800); }
@@ -134,8 +143,10 @@ export function Play({ game, size, difficulty, seed, daily }: Props) {
 
       <main className="stage">
         {g ? <ui.Board puzzle={g.puzzle} solution={g.solution} state={state} set={stableSet} done={done} hint={hint} settings={settings} />
-          : <div className="board-wait" aria-label="Making your puzzle" />}
+          : <div className="board-wait" role="status" aria-label="Making your puzzle" />}
       </main>
+
+      <p className="sr-only" role="status" aria-live="polite">{done ? `Solved in ${formatTime(ms)}.` : ''}</p>
 
       {hint && (
         <aside className="hint" role="status">
@@ -148,12 +159,13 @@ export function Play({ game, size, difficulty, seed, daily }: Props) {
       )}
 
       {done ? (
-        <section className="result" aria-live="polite">
+        <section className="result">
           <p className="result-label">{already ? 'Solved today' : isBest ? 'New best' : 'Solved'}</p>
-          <p className="result-time">{formatTime(ms)}</p>
+          <p className="result-time"><Time text={formatTime(ms)} /></p>
           <p className="result-note">
             {hints > 0 && !already ? `${hints} hint${hints === 1 ? '' : 's'} used. ` : ''}
             {best > 0 && !isBest ? `Your best at this size and level is ${formatTime(best)}.` : ''}
+            {daily ? ` ${streak(results)} day${streak(results) === 1 ? '' : 's'} in a row. Next daily tomorrow.` : ''}
           </p>
           <div className="result-actions">
             <button className="btn btn-primary btn-wide" onClick={() => next()} autoFocus>{daily ? 'Play another' : 'Next puzzle'}</button>

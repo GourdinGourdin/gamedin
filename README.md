@@ -21,7 +21,8 @@ npm run build      # production build in dist/ (static files, host anywhere)
 npm test           # engine tests: validity, one solution, no guessing, repeatable seeds
 npm run e2e        # plays all five games in a real browser (needs the dev server on :5183)
 npm run bench      # generation speed and difficulty mix, e.g. `npm run bench crowns 100`
-npm run check:dist # production build: sub-path, installable, offline
+npm run check:dist # production build: sub-path, installable, offline, game pages and SEO tags (set SITE_URL to check canonical links and structured data)
+npm run og         # redraws public/og.png and public/og-<game>.png (needs the dev server on :5183)
 ```
 
 To put it online, see `HOSTING.md`.
@@ -30,8 +31,10 @@ To put it online, see `HOSTING.md`.
 
 - `src/engine/<game>/`: `solve.ts` (exact solver, counts solutions), `logic.ts` (human-style deductions, used to grade difficulty and to explain hints), `generate.ts` (seeded generator). No DOM; runs in a Web Worker.
 - `src/ui/boards/`: one SVG board per game, with pointer and keyboard input.
-- `src/ui/`: home, play screen, statistics, settings. `styles.css` holds the design tokens.
+- `src/ui/`: home, one page per game (`GamePage.tsx`), play screen, statistics, settings. `styles.css` holds the design tokens.
+- `src/seo.ts`: titles, descriptions and the intro text of each game page. `scripts/pages.ts` turns them into head tags, JSON-LD, `sitemap.xml`, `robots.txt` and `404.html` at build time (see `vite.config.ts`).
 - `src/store.ts`: scores, saved games and settings in localStorage.
+- Each game has a real page, `/trace/`, `/crowns/` and so on, built to `dist/<game>/index.html` with its own title, description, canonical link, preview image and structured data. Routes inside the app stay hash-based and work from any of these pages.
 - A puzzle is fully described by `game / size / difficulty / seed`, which is also its link: `#/play/crowns/8/hard/k3f9x2`.
 
 Word list for Wind: SCOWL (Kevin Atkinson, permissive SCOWL licence), common levels only. Typeface: Schibsted Grotesk (SIL Open Font Licence).

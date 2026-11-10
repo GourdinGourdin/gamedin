@@ -16,7 +16,7 @@ export interface Settings {
 interface Data { settings: Settings; results: Result[]; progress: Partial<Record<GameId, Progress>> }
 
 const KEY = 'gamedin/v1';
-const fresh = (): Data => ({ settings: { theme: 'auto', autoCross: true, showErrors: true, prefs: {}, seenHow: {} }, results: [], progress: {} });
+const fresh = (): Data => ({ settings: { theme: 'light', autoCross: true, showErrors: true, prefs: {}, seenHow: {} }, results: [], progress: {} });
 
 function load(): Data {
   try {
